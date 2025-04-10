@@ -171,7 +171,8 @@ body {
   padding: 15px;
   background-color: white;
   border-top: 1px solid #eee;
-  align-items: flex-end;
+  align-items: center; /* Changed from align-items: flex-end to center */
+  gap: 10px; /* Add consistent gap instead of margin-left */
 }
 
 .chat-input {
@@ -181,17 +182,18 @@ body {
   border-radius: 24px;
   font-size: 1rem;
   outline: none;
-  transition: border 0.3s;
+  transition: border 0.3s, box-shadow 0.2s;
   resize: none;
   max-height: 150px;
-  min-height: 44px;
-  overflow-y: auto;
+  min-height: 44px; /* Match button height */
   line-height: 1.4;
   font-family: inherit;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .chat-input:focus {
   border-color: var(--primary-color);
+  box-shadow: 0 1px 4px rgba(74, 111, 165, 0.2);
 }
 
 .send-button {
@@ -199,19 +201,25 @@ body {
   color: white;
   border: none;
   width: 44px;
-  height: 44px;
+  height: 44px; /* Match consistent height */
   border-radius: 50%;
-  margin-left: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
   flex-shrink: 0;
+  padding: 0; /* Remove default button padding */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .send-button:hover {
   background-color: #3a5b8c;
+  transform: scale(1.05);
+}
+
+.send-button:active {
+  transform: scale(0.95);
 }
 
 .send-button svg {
