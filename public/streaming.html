@@ -12,6 +12,14 @@
   <div class="chat-container">
     <div class="chat-header">
       <h1>Kevin's Chat Assistant</h1>
+      <div class="model-selector-container">
+        <label for="modelSelector">Model:</label>
+        <select id="modelSelector" class="model-selector">
+          <option value="gemma3">Google Gemini</option>
+          <option value="deepseek-r1">Deepseek R1</option>
+          <option value="llama3.2">Meta Llama</option>
+        </select>
+      </div>
     </div>
     <div id="chatMessages" class="chat-messages"></div>
     <div class="chat-input-container">

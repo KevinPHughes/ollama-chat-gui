@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('chatInput');
   const chatMessages = document.getElementById('chatMessages');
   const sendButton = document.getElementById('sendButton');
+  const modelSelector = document.getElementById('modelSelector');
 
   // Initialize conversation history array
   let conversationHistory = [];
@@ -135,6 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = chatInput.value.trim();
     if (!message) return;
 
+    // Get selected model
+    const selectedModel = modelSelector.value;
+
     // Create user message element
     const userMessageElement = createMessageElement(message, true);
     chatMessages.appendChild(userMessageElement);
@@ -163,7 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: JSON.stringify({
           message: message,
-          messages: conversationHistory
+          messages: conversationHistory,
+          model: selectedModel // Send the selected model to the server
         })
       });
 
@@ -190,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const chunk = JSON.parse(data);
               if (chunk.message?.content) {
                 fullResponse += chunk.message.content;
-                botResponseElement.innerHTML = marked.parse(fullResponse);
+                botResponseElement.innerHTML = processHTML(marked.parse(fullResponse));
 
                 // Re-add the timestamp which might have been overwritten
                 const timeElement = document.createElement('div');
