@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Ollama Chatbot</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    #chat-area {
+      width: 80%;
+      height: 400px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      overflow-y: scroll;
+      /* Enable scrolling if content overflows */
+    }
+
+    #message-input {
+      width: 80%;
+      padding: 5px;
+    }
+
+    #send-button {
+      padding: 5px 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    #send-button:hover {
+      background-color: #3e8e41;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Ollama Chatbot</h1>
+  <div id="chatArea">
+    <div id="responseArea"></div>
+  </div>
+  <input type="text" id="chatInput" placeholder="Enter your message">
+  <button id="send-button">Send</button>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+
+    const chatInput = document.getElementById('chatInput');
+    const responseArea = document.getElementById('responseArea');
+    const marked = window.marked; // Access the marked library
+
+    const chatArea = document.getElementById('chatArea');
+    const sendButton = document.getElementById('send-button');
+
+    chatInput.addEventListener('keypress', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Get the text from the textbox
+        const message = chatInput.value;
+
+        // Send the message to the server
+        fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: message })
+        })
+          .then(response => response.json())
+          .then(data => {
+            const botResponse = data.message.message.content;
+            //clear chatInput
+            const humanEntry = document.createElement('div');
+            humanEntry.textContent = "You: " + message;
+            humanEntry.style.backgroundColor = '#eee';
+            humanEntry.style.marginBottom = '5px';
+            chatArea.appendChild(humanEntry);
+            chatInput.value = '';
+            // Display the bot's response
+            const botResponseElement = document.createElement('div');
+            botResponseElement.innerHTML = "Bot: " + marked.parse(botResponse);
+            botResponseElement.style.backgroundColor = '#ddd';
+            botResponseElement.style.marginBottom = '5px';
+            chatArea.appendChild(botResponseElement);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+    });
+  </script>
+</body>
+
+</html>
