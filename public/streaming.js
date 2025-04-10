@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get selected model
     const selectedModel = modelSelector.value;
+    const isDeepseekModel = selectedModel === 'deepseek-r1';
 
     // Create user message element
     const userMessageElement = createMessageElement(message, true);
@@ -179,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Remove loading indicator
       botResponseElement.classList.remove('loading');
 
+      // Update the streaming portion to ensure timestamps are only added once and final content shows up
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -195,13 +197,29 @@ document.addEventListener('DOMContentLoaded', () => {
               const chunk = JSON.parse(data);
               if (chunk.message?.content) {
                 fullResponse += chunk.message.content;
-                botResponseElement.innerHTML = processHTML(marked.parse(fullResponse));
 
-                // Re-add the timestamp which might have been overwritten
-                const timeElement = document.createElement('div');
-                timeElement.className = 'message-time';
-                timeElement.textContent = formatTimestamp();
-                botResponseElement.appendChild(timeElement);
+                // Process thinking content for deepseek model
+                const processedContent = processThinkingContent(
+                  fullResponse,
+                  botResponseElement,
+                  isDeepseekModel
+                );
+
+                // Find (or create) the regular content container
+                let regularContentContainer = botResponseElement.querySelector('.regular-content');
+                if (!regularContentContainer) {
+                  regularContentContainer = botResponseElement.querySelector('.response-wrapper')?.querySelector('.regular-content');
+
+                  // If still not found and no response wrapper exists, use the whole element
+                  if (!regularContentContainer && !botResponseElement.querySelector('.response-wrapper')) {
+                    regularContentContainer = botResponseElement;
+                  }
+                }
+
+                // Display the regular content (with thinking parts removed)
+                if (regularContentContainer) {
+                  regularContentContainer.innerHTML = processHTML(marked.parse(processedContent));
+                }
 
                 // Scroll to bottom as new content arrives
                 scrollToBottomIfNeeded();
@@ -212,6 +230,15 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       }
+
+      // AFTER streaming is complete, add/update the timestamp
+      const existingTimeElements = botResponseElement.querySelectorAll('.message-time');
+      existingTimeElements.forEach(el => el.remove());
+
+      const timeElement = document.createElement('div');
+      timeElement.className = 'message-time';
+      timeElement.textContent = formatTimestamp();
+      botResponseElement.appendChild(timeElement);
 
       // Add assistant's response to history
       conversationHistory.push({ role: 'assistant', content: fullResponse });
@@ -233,4 +260,124 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Focus input field when page loads
   chatInput.focus();
+
+  // Replace your processThinkingContent function with this version:
+
+  function processThinkingContent(content, element, isDeepseekModel) {
+    // Only process for the deepseek model
+    if (!isDeepseekModel) {
+      return content;
+    }
+
+    // Check if we have a thinking section
+    const thinkStartTag = '<think>';
+    const thinkEndTag = '</think>';
+
+    const thinkStartIndex = content.indexOf(thinkStartTag);
+
+    if (thinkStartIndex === -1) {
+      return content; // No thinking section found
+    }
+
+    // Find the end of the thinking section
+    const thinkEndIndex = content.indexOf(thinkEndTag, thinkStartIndex);
+
+    // Get the regular (non-thinking) content part
+    let regularContent = '';
+
+    // If we have a complete thinking section
+    if (thinkEndIndex !== -1) {
+      // Extract the thinking content
+      const thinkingContent = content.substring(
+        thinkStartIndex + thinkStartTag.length,
+        thinkEndIndex
+      );
+
+      // Get content before and after the thinking tags
+      const beforeThinking = content.substring(0, thinkStartIndex);
+      const afterThinking = content.substring(thinkEndIndex + thinkEndTag.length);
+
+      // Combine for regular content (important!)
+      regularContent = beforeThinking + afterThinking;
+
+      // Create or update the thinking section
+      updateThinkingSection(element, thinkingContent, true);
+
+      // Debug - log what we're capturing
+      console.log("Regular content:", regularContent);
+      console.log("Thinking content:", thinkingContent);
+    }
+    // If we have a partial thinking section (still in progress)
+    else if (thinkStartIndex !== -1) {
+      // Extract the thinking content so far
+      const thinkingContent = content.substring(thinkStartIndex + thinkStartTag.length);
+
+      // Only content before thinking tags is available yet
+      regularContent = content.substring(0, thinkStartIndex);
+
+      // Create or update the thinking section
+      updateThinkingSection(element, thinkingContent, false);
+    }
+
+    return regularContent;
+  }
+
+  // Enhanced updateThinkingSection function
+
+  function updateThinkingSection(parentElement, content, isComplete) {
+    // Look for an existing response wrapper or create one
+    let responseWrapper = parentElement.querySelector('.response-wrapper');
+    if (!responseWrapper) {
+      // First, save any existing timestamp
+      const existingTimestamp = parentElement.querySelector('.message-time');
+
+      // Save any existing content (except timestamps)
+      let existingContent = '';
+      Array.from(parentElement.childNodes).forEach(node => {
+        if (!node.classList || !node.classList.contains('message-time')) {
+          existingContent += node.outerHTML || node.textContent;
+        }
+      });
+
+      // Clear the parent (but do not remove it)
+      parentElement.innerHTML = '';
+
+      // Create wrapper for proper structure
+      responseWrapper = document.createElement('div');
+      responseWrapper.className = 'response-wrapper';
+      parentElement.appendChild(responseWrapper);
+
+      // Add regular content container
+      const regularContent = document.createElement('div');
+      regularContent.className = 'regular-content';
+      regularContent.innerHTML = existingContent;
+      responseWrapper.appendChild(regularContent);
+
+      // Add timestamp back if it existed
+      if (existingTimestamp) {
+        parentElement.appendChild(existingTimestamp);
+      }
+    }
+
+    // Look for an existing thinking section or create one
+    let thinkingSection = responseWrapper.querySelector('.thinking-section');
+    if (!thinkingSection) {
+      thinkingSection = document.createElement('div');
+      thinkingSection.className = 'thinking-section';
+
+      // Important: insert it before the regular content for better visual flow
+      const regularContent = responseWrapper.querySelector('.regular-content');
+      responseWrapper.insertBefore(thinkingSection, regularContent);
+    }
+
+    // Update the thinking content
+    thinkingSection.innerHTML = marked.parse(content);
+
+    // Add a class to indicate thinking is complete
+    if (isComplete) {
+      thinkingSection.classList.add('thinking-complete');
+    } else {
+      thinkingSection.classList.remove('thinking-complete');
+    }
+  }
 });

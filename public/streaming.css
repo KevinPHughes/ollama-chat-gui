@@ -353,3 +353,58 @@ code {
     white-space: nowrap;
   }
 }
+
+/* Add these styles for the thinking sections */
+
+/* Thinking section styling */
+.thinking-section {
+  background-color: #f8f4e8;
+  border-left: 3px solid #f0c05a;
+  padding: 12px 15px;
+  margin: 10px 0;
+  border-radius: 5px;
+  font-style: italic;
+  position: relative;
+  color: #5a5346;
+  overflow-wrap: break-word;
+}
+
+.thinking-section::before {
+  content: "Thinking...";
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #9c7c38;
+  font-style: normal;
+}
+
+/* When thinking ends, add a subtle visual indicator */
+.thinking-complete {
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.thinking-complete::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #ddd, transparent);
+}
+
+.thinking-complete::before {
+  content: "Thought process:";
+}
+
+/* Add these styles for the new structure */
+.response-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.regular-content {
+  width: 100%;
+}
