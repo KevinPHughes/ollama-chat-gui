@@ -10,13 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Flag to track if we should auto-scroll
   let shouldAutoScroll = true;
 
-  // Threshold in pixels to determine if user is "near" the bottom
-  const SCROLL_THRESHOLD = 50;
+  // Threshold in pixels to determine if user is at the bottom (smaller = more sensitive)
+  const SCROLL_THRESHOLD = 5; // 5 pixels
 
-  // Check if user is near bottom of chat
+  // Check if user is exactly at or very near bottom of chat
   function isNearBottom() {
     const container = chatMessages;
-    return container.scrollHeight - container.scrollTop - container.clientHeight < SCROLL_THRESHOLD;
+    return container.scrollHeight - container.scrollTop - container.clientHeight <= SCROLL_THRESHOLD;
   }
 
   // Function to scroll to bottom if needed
@@ -26,10 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Add scroll event listener to detect manual scrolling
+  // Add a more explicit scroll detection approach
   chatMessages.addEventListener('scroll', () => {
-    // Update auto-scroll flag based on scroll position
-    shouldAutoScroll = isNearBottom();
+    const container = chatMessages;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+
+    // If user has scrolled up at all (even by 1 pixel), disable auto-scroll
+    if (distanceFromBottom > SCROLL_THRESHOLD) {
+      shouldAutoScroll = false;
+    } else {
+      // Only re-enable auto-scroll if they've scrolled all the way to the bottom
+      shouldAutoScroll = true;
+    }
   });
 
   // Configure marked with better options
