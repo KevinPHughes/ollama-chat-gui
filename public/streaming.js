@@ -388,4 +388,75 @@ document.addEventListener('DOMContentLoaded', () => {
       thinkingSection.classList.remove('thinking-complete');
     }
   }
+
+  // Get header and container elements
+  const chatHeader = document.querySelector('.chat-header');
+  const chatContainer = document.querySelector('.chat-container');
+  let lastScrollTop = 0;
+  let headerHeight = chatHeader.offsetHeight;
+
+  // Set initial state
+  chatContainer.classList.add('header-visible');
+  chatContainer.style.paddingTop = headerHeight + 'px';
+
+  // Add scroll event handler to hide/show header and expand content
+  chatMessages.addEventListener('scroll', () => {
+    // Get current scroll position
+    const st = chatMessages.scrollTop;
+
+    // Determine scroll direction and position
+    if (st <= 5) { // More sensitive threshold
+      // At the top - show header
+      showHeader();
+    } else if (st > lastScrollTop) {
+      // Scrolling down - hide header
+      hideHeader();
+    } else if (st < lastScrollTop && st < 50) { // More sensitive for mobile
+      // Scrolling up near the top - show header
+      showHeader();
+    }
+
+    // Update last scroll position
+    lastScrollTop = st;
+
+    // Also handle auto-scroll logic (your existing code)
+    const distanceFromBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight;
+    if (distanceFromBottom > SCROLL_THRESHOLD) {
+      shouldAutoScroll = false;
+    } else {
+      shouldAutoScroll = true;
+    }
+  });
+
+  // Create helper functions for cleaner code
+  function showHeader() {
+    chatHeader.classList.remove('hidden');
+    chatContainer.classList.remove('header-hidden');
+    chatContainer.classList.add('header-visible');
+    // Force recalculation of padding on show
+    chatContainer.style.paddingTop = headerHeight + 'px';
+  }
+
+  function hideHeader() {
+    chatHeader.classList.add('hidden');
+    chatContainer.classList.remove('header-visible');
+    chatContainer.classList.add('header-hidden');
+    // Explicitly set padding to zero when hiding
+    chatContainer.style.paddingTop = '0';
+  }
+
+  // Trigger a layout recalculation on page load to ensure proper initial sizing
+  window.addEventListener('load', () => {
+    // Force a reflow to ensure correct measurements
+    headerHeight = chatHeader.offsetHeight;
+    chatContainer.style.paddingTop = headerHeight + 'px';
+  });
+
+  // Handle window resize to recalculate header height
+  window.addEventListener('resize', () => {
+    headerHeight = chatHeader.offsetHeight;
+    if (chatContainer.classList.contains('header-visible')) {
+      chatContainer.style.paddingTop = headerHeight + 'px';
+    }
+  });
 });

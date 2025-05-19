@@ -36,6 +36,8 @@ body {
   flex-direction: column;
   flex: 1;
   overflow: hidden;
+  position: relative; /* Added for header behavior */
+  transition: padding-top 0.3s ease; /* Smooth transition for padding */
 }
 
 .chat-header {
@@ -47,6 +49,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between; /* Space between title and model selector */
+  position: absolute; /* Changed to absolute for hiding effect */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transition: transform 0.3s ease; /* Smooth transition for hide/show */
+  transform: translateY(0);
+  height: auto; /* Allow natural height */
+}
+
+.chat-header.hidden {
+  transform: translateY(-100%); /* Moves the header out of view */
+  opacity: 0; /* Fades out the header */
+  pointer-events: none; /* Prevent interaction with hidden header */
 }
 
 .chat-header h1 {
@@ -105,6 +121,17 @@ body {
   flex-direction: column;
   gap: 12px;
   max-height: calc(100vh - 180px);
+  transition: max-height 0.3s ease; /* Smooth transition for max-height */
+  height: 100%; /* Use full height of container */
+}
+
+.chat-container.header-visible .chat-messages {
+  max-height: calc(100vh - 180px); /* Original value with header */
+}
+
+.chat-container.header-hidden .chat-messages {
+  max-height: calc(100vh - 116px); /* Adjusted for input area only */
+  height: calc(100vh - 70px); /* Adjust for input area height */
 }
 
 .message {
@@ -263,6 +290,18 @@ code {
 
   .message {
     max-width: 90%;
+  }
+
+  /* Force container to full height on mobile */
+  .chat-container {
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  /* Ensure messages expand properly on mobile */
+  .chat-container.header-hidden .chat-messages {
+    height: calc(100vh - 70px); /* Adjust for input area height */
   }
 }
 

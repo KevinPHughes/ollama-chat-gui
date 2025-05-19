@@ -67,7 +67,6 @@ app.post('/stream', async (req, res) => {
     for await (const chunk of stream) {
       if (chunk.message?.content) {
         // Send each chunk as an SSE event
-        console.log("chunk: ", chunk.message.content)
         res.write(`data: ${JSON.stringify(chunk)}\n\n`);
       }
     }
