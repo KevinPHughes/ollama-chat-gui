@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Get selected model
     const selectedModel = modelSelector.value;
-    const isDeepseekModel = selectedModel === 'deepseek-r1';
+    const isDeepseekModel = selectedModel === 'deepseek-r1:14b';
 
     // Create user message element
     const userMessageElement = createMessageElement(message, true);
@@ -394,46 +394,53 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatContainer = document.querySelector('.chat-container');
   let lastScrollTop = 0;
   let headerHeight = chatHeader.offsetHeight;
+  let scrollTimeout;
+  let isScrollHandlerActive = false;
 
   // Set initial state
-  chatContainer.classList.add('header-visible');
+  document.body.style.paddingTop = '0';
   chatContainer.style.paddingTop = headerHeight + 'px';
 
-  // Add scroll event handler to hide/show header and expand content
-  chatMessages.addEventListener('scroll', () => {
-    // Get current scroll position
-    const st = chatMessages.scrollTop;
+  // Debounced scroll handler to reduce performance impact
+  function handleScroll() {
+    if (!isScrollHandlerActive) return;
 
-    // Determine scroll direction and position
-    if (st <= 5) { // More sensitive threshold
-      // At the top - show header
-      showHeader();
-    } else if (st > lastScrollTop) {
-      // Scrolling down - hide header
-      hideHeader();
-    } else if (st < lastScrollTop && st < 50) { // More sensitive for mobile
-      // Scrolling up near the top - show header
-      showHeader();
-    }
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      // Get current scroll position
+      const st = chatMessages.scrollTop;
 
-    // Update last scroll position
-    lastScrollTop = st;
+      // Add a threshold to prevent triggering on tiny scroll changes
+      const scrollDelta = Math.abs(st - lastScrollTop);
 
-    // Also handle auto-scroll logic (your existing code)
-    const distanceFromBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight;
-    if (distanceFromBottom > SCROLL_THRESHOLD) {
-      shouldAutoScroll = false;
-    } else {
-      shouldAutoScroll = true;
-    }
-  });
+      if (scrollDelta < 5) return; // Ignore very small scroll movements
 
-  // Create helper functions for cleaner code
+      // Determine scroll direction and position
+      if (st <= 10) {
+        // At the top - show header
+        showHeader();
+      } else if (st > lastScrollTop + 10) { // Add threshold to decrease sensitivity
+        // Scrolling down - hide header
+        hideHeader();
+      } else if (st < lastScrollTop - 30 && st < 150) { // More aggressive for upward scrolls
+        // Scrolling up near the top - show header
+        showHeader();
+      }
+
+      // Update last scroll position
+      lastScrollTop = st;
+
+      // Handle auto-scroll logic
+      const distanceFromBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight;
+      shouldAutoScroll = (distanceFromBottom <= SCROLL_THRESHOLD);
+    }, 10); // Small timeout for performance
+  }
+
+  // Create helper functions with improved transitions
   function showHeader() {
     chatHeader.classList.remove('hidden');
     chatContainer.classList.remove('header-hidden');
     chatContainer.classList.add('header-visible');
-    // Force recalculation of padding on show
     chatContainer.style.paddingTop = headerHeight + 'px';
   }
 
@@ -441,18 +448,24 @@ document.addEventListener('DOMContentLoaded', () => {
     chatHeader.classList.add('hidden');
     chatContainer.classList.remove('header-visible');
     chatContainer.classList.add('header-hidden');
-    // Explicitly set padding to zero when hiding
     chatContainer.style.paddingTop = '0';
   }
 
-  // Trigger a layout recalculation on page load to ensure proper initial sizing
+  // Delayed initialization to prevent flickers on page load
   window.addEventListener('load', () => {
     // Force a reflow to ensure correct measurements
     headerHeight = chatHeader.offsetHeight;
     chatContainer.style.paddingTop = headerHeight + 'px';
+
+    // Delay activating scroll handler to avoid initial flickers
+    setTimeout(() => {
+      isScrollHandlerActive = true;
+      // Add proper scroll event listener
+      chatMessages.addEventListener('scroll', handleScroll);
+    }, 500);
   });
 
-  // Handle window resize to recalculate header height
+  // Update dimensions on resize
   window.addEventListener('resize', () => {
     headerHeight = chatHeader.offsetHeight;
     if (chatContainer.classList.contains('header-visible')) {
