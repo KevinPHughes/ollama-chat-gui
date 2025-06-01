@@ -1,10 +1,19 @@
+/**
+ * Kevin's Chat Assistant - Styles
+ *
+ * This CSS defines the styling for the chat interface including
+ * theme support (light/dark mode), layout, and component styles.
+ */
+
+/* -------------------------------------------------------------
+   VARIABLES AND THEME SETTINGS
+   ------------------------------------------------------------- */
 :root {
+  /* Color palette - light theme */
   --primary-color: #4a6fa5;
   --secondary-color: #f0f4f8;
   --user-msg-color: #e3f2fd;
   --bot-msg-color: #f5f5f5;
-  --border-radius: 12px;
-  --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   --bg-color: #f9f9f9;
   --container-bg: #ffffff;
   --text-color: #333333;
@@ -16,6 +25,10 @@
   --thinking-border: #f0c05a;
   --thinking-color: #5a5346;
   --thinking-title: #9c7c38;
+
+  /* Dimensions and spacing */
+  --border-radius: 12px;
+  --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   --transition-speed: 0.3s;
 }
 
@@ -38,6 +51,9 @@
   --thinking-title: #d4b876;
 }
 
+/* -------------------------------------------------------------
+   BASE STYLES
+   ------------------------------------------------------------- */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -57,6 +73,9 @@ body {
   transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
+/* -------------------------------------------------------------
+   LAYOUT STRUCTURE
+   ------------------------------------------------------------- */
 .chat-container {
   max-width: 900px;
   width: 90%;
@@ -95,13 +114,6 @@ body {
   margin: 0 auto;
 }
 
-/* Improved header controls layout */
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .chat-header.hidden {
   transform: translateY(-100%);
   opacity: 0;
@@ -118,48 +130,6 @@ body {
   width: 32px;
   height: 32px;
   margin-right: 10px;
-}
-
-.model-selector-container {
-  display: flex;
-  align-items: center;
-}
-
-.model-selector-container label {
-  margin-right: 8px;
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
-.model-selector {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  outline: none;
-  transition: background-color 0.2s;
-}
-
-/* Theme toggle styling - add margin for spacing */
-.theme-toggle {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  height: 32px; /* Match the approximate height of the model selector */
-  width: 32px;
-  border-radius: 4px; /* Match model selector border radius */
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 0;
-  margin-left: 10px; /* Add spacing between selector and toggle */
-  transition: background-color 0.2s;
-  outline: none;
 }
 
 .chat-messages {
@@ -186,6 +156,103 @@ body {
   height: calc(100vh - 70px);
 }
 
+.chat-input-container {
+  display: flex;
+  padding: 15px;
+  background-color: var(--container-bg);
+  border-top: 1px solid var(--border-color);
+  align-items: center;
+  gap: 10px;
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+/* -------------------------------------------------------------
+   HEADER CONTROLS
+   ------------------------------------------------------------- */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.model-selector-container {
+  display: flex;
+  align-items: center;
+}
+
+.model-selector-container label {
+  margin-right: 8px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.model-selector {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.2s;
+}
+
+.model-selector:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  height: 32px;
+  width: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0;
+  margin-left: 10px; /* Add spacing between selector and toggle */
+  transition: background-color 0.2s;
+  outline: none;
+}
+
+.theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.sun-icon, .moon-icon {
+  position: absolute;
+  transition: opacity 0.3s, transform 0.5s;
+}
+
+.dark-theme .sun-icon {
+  opacity: 1;
+  transform: rotate(0);
+}
+
+.dark-theme .moon-icon {
+  opacity: 0;
+  transform: rotate(90deg);
+}
+
+.sun-icon {
+  opacity: 0;
+  transform: rotate(-90deg);
+}
+
+.moon-icon {
+  opacity: 1;
+  transform: rotate(0);
+}
+
+/* -------------------------------------------------------------
+   MESSAGE STYLING
+   ------------------------------------------------------------- */
 .message {
   max-width: 80%;
   padding: 12px 16px;
@@ -212,33 +279,6 @@ body {
   box-shadow: var(--shadow);
 }
 
-.bot-message.loading::after {
-  content: "●";
-  animation: dotAnimation 1.4s infinite;
-}
-
-@keyframes dotAnimation {
-  0%, 20% { content: "●"; }
-  40% { content: "● ●"; }
-  60% { content: "● ● ●"; }
-  80%, 100% { content: ""; }
-}
-
-.bot-message p {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  margin-block-start: 0;
-  margin-block-end: 0;
-}
-
-.bot-message p:first-child {
-  margin-top: 0;
-}
-
-.bot-message p:last-child {
-  margin-bottom: 0;
-}
-
 .message-time {
   font-size: 0.7rem;
   opacity: 0.7;
@@ -246,16 +286,9 @@ body {
   text-align: right;
 }
 
-.chat-input-container {
-  display: flex;
-  padding: 15px;
-  background-color: var(--container-bg);
-  border-top: 1px solid var(--border-color);
-  align-items: center;
-  gap: 10px;
-  transition: background-color var(--transition-speed), border-color var(--transition-speed);
-}
-
+/* -------------------------------------------------------------
+   INPUT AREA
+   ------------------------------------------------------------- */
 .chat-input {
   flex: 1;
   padding: 12px 16px;
@@ -272,6 +305,11 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   background-color: var(--input-bg);
   color: var(--text-color);
+}
+
+.chat-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 1px 4px rgba(74, 111, 165, 0.2);
 }
 
 .send-button {
@@ -292,7 +330,7 @@ body {
 }
 
 .send-button:hover {
-  background-color: #3a5b8c;
+  background-color: var(--primary-dark, #3a5b8c);
   transform: scale(1.05);
 }
 
@@ -305,7 +343,57 @@ body {
   height: 20px;
 }
 
-/* Code block styling with theme awareness */
+/* -------------------------------------------------------------
+   THINKING SECTION STYLES
+   ------------------------------------------------------------- */
+.thinking-section {
+  background-color: var(--thinking-bg);
+  border-left: 3px solid var(--thinking-border);
+  padding: 12px 15px;
+  margin: 10px 0;
+  border-radius: 5px;
+  font-style: italic;
+  position: relative;
+  color: var(--thinking-color);
+  overflow-wrap: break-word;
+  transition: background-color var(--transition-speed),
+              color var(--transition-speed),
+              border-left-color var(--transition-speed);
+}
+
+.thinking-section::before {
+  content: "Thinking...";
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--thinking-title);
+  font-style: normal;
+  transition: color var(--transition-speed);
+}
+
+/* When thinking ends, add a subtle visual indicator */
+.thinking-complete {
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.thinking-complete::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #ddd, transparent);
+}
+
+.thinking-complete::before {
+  content: "Thought process:";
+}
+
+/* -------------------------------------------------------------
+   CODE & MARKDOWN ELEMENTS
+   ------------------------------------------------------------- */
 pre {
   background-color: var(--code-bg);
   color: var(--code-color);
@@ -321,43 +409,9 @@ code {
   font-size: 0.9rem;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .chat-container {
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-    border-radius: 0;
-  }
-
-  .chat-header {
-    border-radius: 0;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .model-selector-container {
-    margin-top: 10px;
-  }
-
-  .message {
-    max-width: 90%;
-  }
-
-  /* Force container to full height on mobile */
-  .chat-container {
-    height: 100vh;
-    margin: 0;
-    border-radius: 0;
-  }
-
-  /* Ensure messages expand properly on mobile */
-  .chat-container.header-hidden .chat-messages {
-    height: calc(100vh - 70px); /* Adjust for input area height */
-  }
-}
-
-/* Table styling with theme awareness */
+/* -------------------------------------------------------------
+   TABLE STYLING
+   ------------------------------------------------------------- */
 .bot-message table {
   border-collapse: collapse;
   width: 100%;
@@ -411,7 +465,9 @@ code {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Normalize list spacing */
+/* -------------------------------------------------------------
+   LIST STYLING
+   ------------------------------------------------------------- */
 .bot-message ul,
 .bot-message ol {
   margin-top: 0.3em;
@@ -464,61 +520,42 @@ code {
   }
 }
 
-/* Add these styles for the thinking sections */
+/* -------------------------------------------------------------
+   RESPONSIVE DESIGN
+   ------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .chat-container {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
 
-/* Thinking section styling */
-.thinking-section {
-  background-color: var(--thinking-bg);
-  border-left: 3px solid var(--thinking-border);
-  padding: 12px 15px;
-  margin: 10px 0;
-  border-radius: 5px;
-  font-style: italic;
-  position: relative;
-  color: var(--thinking-color);
-  overflow-wrap: break-word;
-  transition: background-color var(--transition-speed), color var(--transition-speed), border-left-color var(--transition-speed);
-}
+  .chat-header {
+    border-radius: 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.thinking-section::before {
-  content: "Thinking...";
-  display: block;
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: var(--thinking-title);
-  font-style: normal;
-  transition: color var(--transition-speed);
-}
+  .model-selector-container {
+    margin-top: 10px;
+  }
 
-/* When thinking ends, add a subtle visual indicator */
-.thinking-complete {
-  position: relative;
-  padding-bottom: 8px;
-}
+  .message {
+    max-width: 90%;
+  }
 
-.thinking-complete::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #ddd, transparent);
-}
+  /* Force container to full height on mobile */
+  .chat-container {
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
 
-.thinking-complete::before {
-  content: "Thought process:";
-}
-
-/* Add these styles for the new structure */
-.response-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.regular-content {
-  width: 100%;
+  /* Ensure messages expand properly on mobile */
+  .chat-container.header-hidden .chat-messages {
+    height: calc(100vh - 70px); /* Adjust for input area height */
+  }
 }
 
 /* Mobile landscape optimizations */
