@@ -5,6 +5,37 @@
   --bot-msg-color: #f5f5f5;
   --border-radius: 12px;
   --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --bg-color: #f9f9f9;
+  --container-bg: #ffffff;
+  --text-color: #333333;
+  --border-color: #dddddd;
+  --code-bg: #282c34;
+  --code-color: #abb2bf;
+  --input-bg: #ffffff;
+  --thinking-bg: #f8f4e8;
+  --thinking-border: #f0c05a;
+  --thinking-color: #5a5346;
+  --thinking-title: #9c7c38;
+  --transition-speed: 0.3s;
+}
+
+/* Dark theme variables */
+.dark-theme {
+  --primary-color: #5580b4;
+  --secondary-color: #2a3950;
+  --user-msg-color: #345278;
+  --bot-msg-color: #2a2a2a;
+  --bg-color: #121212;
+  --container-bg: #1e1e1e;
+  --text-color: #e0e0e0;
+  --border-color: #444444;
+  --code-bg: #1a1a1a;
+  --code-color: #cccccc;
+  --input-bg: #2a2a2a;
+  --thinking-bg: #2a2510;
+  --thinking-border: #b39343;
+  --thinking-color: #e0d6c2;
+  --thinking-title: #d4b876;
 }
 
 * {
@@ -15,14 +46,15 @@
 }
 
 body {
-  background-color: #f9f9f9;
-  color: #333;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   line-height: 1.3;
   padding: 0;
   margin: 0;
   height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
 .chat-container {
@@ -31,14 +63,14 @@ body {
   margin: 0 auto;
   height: 100vh;
   border-radius: var(--border-radius);
-  background-color: #fff;
+  background-color: var(--container-bg);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  position: relative; /* Added for header behavior */
-  transition: padding-top 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); /* Smooth transition for padding */
+  position: relative;
+  transition: background-color var(--transition-speed), padding-top 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .chat-header {
@@ -47,15 +79,15 @@ body {
   color: white;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Space between title and model selector */
-  position: fixed; /* Change from absolute to fixed */
+  justify-content: space-between;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); /* Better easing */
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), background-color var(--transition-speed);
   transform: translateY(0);
-  will-change: transform; /* Hint browser for optimization */
+  will-change: transform;
   border-top-left-radius: var(--border-radius);
   border-top-right-radius: var(--border-radius);
   width: 100%;
@@ -63,10 +95,17 @@ body {
   margin: 0 auto;
 }
 
+/* Improved header controls layout */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .chat-header.hidden {
-  transform: translateY(-100%); /* Moves the header out of view */
-  opacity: 0; /* Fades out the header */
-  pointer-events: none; /* Prevent interaction with hidden header */
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .chat-header h1 {
@@ -104,17 +143,23 @@ body {
   transition: background-color 0.2s;
 }
 
-.model-selector:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-
-.model-selector:focus {
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.model-selector option {
-  background-color: #fff;
-  color: #333;
+/* Theme toggle styling - add margin for spacing */
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  height: 32px; /* Match the approximate height of the model selector */
+  width: 32px;
+  border-radius: 4px; /* Match model selector border radius */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0;
+  margin-left: 10px; /* Add spacing between selector and toggle */
+  transition: background-color 0.2s;
+  outline: none;
 }
 
 .chat-messages {
@@ -126,27 +171,30 @@ body {
   gap: 12px;
   position: relative;
   transition: padding-top 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  will-change: padding-top; /* Hint for browser */
-  height: calc(100vh - 80px); /* Fixed height minus input area */
+  will-change: padding-top;
+  height: calc(100vh - 80px);
+  background-color: var(--container-bg);
+  color: var(--text-color);
 }
 
 .chat-container.header-visible .chat-messages {
-  max-height: calc(100vh - 180px); /* Original value with header */
+  max-height: calc(100vh - 180px);
 }
 
 .chat-container.header-hidden .chat-messages {
-  max-height: calc(100vh - 116px); /* Adjusted for input area only */
-  height: calc(100vh - 70px); /* Adjust for input area height */
+  max-height: calc(100vh - 116px);
+  height: calc(100vh - 70px);
 }
 
 .message {
   max-width: 80%;
   padding: 12px 16px;
   border-radius: 18px;
-  line-height: 1.4; /* Reduced from 1.5 */
+  line-height: 1.4;
   position: relative;
   margin-bottom: 5px;
-  white-space: pre-line; /* Preserves line breaks in messages */
+  white-space: pre-line;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
 .user-message {
@@ -159,7 +207,7 @@ body {
 .bot-message {
   align-self: flex-start;
   background-color: var(--bot-msg-color);
-  color: #333;
+  color: var(--text-color);
   border-bottom-left-radius: 5px;
   box-shadow: var(--shadow);
 }
@@ -201,31 +249,29 @@ body {
 .chat-input-container {
   display: flex;
   padding: 15px;
-  background-color: white;
-  border-top: 1px solid #eee;
-  align-items: center; /* Changed from align-items: flex-end to center */
-  gap: 10px; /* Add consistent gap instead of margin-left */
+  background-color: var(--container-bg);
+  border-top: 1px solid var(--border-color);
+  align-items: center;
+  gap: 10px;
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
 }
 
 .chat-input {
   flex: 1;
   padding: 12px 16px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 24px;
   font-size: 1rem;
   outline: none;
-  transition: border 0.3s, box-shadow 0.2s;
+  transition: border 0.3s, box-shadow 0.2s, background-color var(--transition-speed), color var(--transition-speed);
   resize: none;
   max-height: 150px;
-  min-height: 44px; /* Match button height */
+  min-height: 44px;
   line-height: 1.4;
   font-family: inherit;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.chat-input:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 1px 4px rgba(74, 111, 165, 0.2);
+  background-color: var(--input-bg);
+  color: var(--text-color);
 }
 
 .send-button {
@@ -233,7 +279,7 @@ body {
   color: white;
   border: none;
   width: 44px;
-  height: 44px; /* Match consistent height */
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -241,7 +287,7 @@ body {
   justify-content: center;
   transition: background-color 0.3s, transform 0.2s;
   flex-shrink: 0;
-  padding: 0; /* Remove default button padding */
+  padding: 0;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -259,14 +305,15 @@ body {
   height: 20px;
 }
 
-/* Code block styling */
+/* Code block styling with theme awareness */
 pre {
-  background-color: #282c34;
-  color: #abb2bf;
+  background-color: var(--code-bg);
+  color: var(--code-color);
   padding: 12px;
   border-radius: 5px;
   overflow-x: auto;
   margin: 10px 0;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
 code {
@@ -310,7 +357,7 @@ code {
   }
 }
 
-/* Table styling */
+/* Table styling with theme awareness */
 .bot-message table {
   border-collapse: collapse;
   width: 100%;
@@ -319,6 +366,8 @@ code {
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   overflow: hidden;
+  border-color: var(--border-color);
+  transition: border-color var(--transition-speed);
 }
 
 .bot-message thead tr {
@@ -334,23 +383,32 @@ code {
 }
 
 .bot-message tbody tr {
-  border-bottom: 1px solid #dddddd;
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color var(--transition-speed);
 }
 
 .bot-message tbody tr:nth-of-type(even) {
-  background-color: #f3f3f3;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.dark-theme .bot-message tbody tr:nth-of-type(even) {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .bot-message tbody tr:last-of-type {
-  border-bottom: 2px solid #4a6fa5;
+  border-bottom: 2px solid var(--primary-color);
 }
 
 /* Add this for code in tables */
 .bot-message td code {
-  background-color: #f0f0f0;
+  background-color: rgba(0, 0, 0, 0.05);
   padding: 2px 4px;
   border-radius: 3px;
   font-size: 0.85em;
+}
+
+.dark-theme .bot-message td code {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Normalize list spacing */
@@ -358,7 +416,7 @@ code {
 .bot-message ol {
   margin-top: 0.3em;
   margin-bottom: 0.3em;
-  padding-left: 1.5em; /* Even more reduced padding */
+  padding-left: 1.5em;
 }
 
 /* Target nested lists specifically */
@@ -366,12 +424,12 @@ code {
 .bot-message li > ol {
   margin-top: 0.2em;
   margin-bottom: 0.2em;
-  padding-left: 1.2em; /* Further reduced for nested lists */
+  padding-left: 1.2em;
 }
 
 /* Tighten spacing between list items */
 .bot-message li {
-  margin-bottom: 0.1em; /* Tighter spacing between items */
+  margin-bottom: 0.1em;
 }
 
 /* Make paragraphs inside list items more compact */
@@ -410,15 +468,16 @@ code {
 
 /* Thinking section styling */
 .thinking-section {
-  background-color: #f8f4e8;
-  border-left: 3px solid #f0c05a;
+  background-color: var(--thinking-bg);
+  border-left: 3px solid var(--thinking-border);
   padding: 12px 15px;
   margin: 10px 0;
   border-radius: 5px;
   font-style: italic;
   position: relative;
-  color: #5a5346;
+  color: var(--thinking-color);
   overflow-wrap: break-word;
+  transition: background-color var(--transition-speed), color var(--transition-speed), border-left-color var(--transition-speed);
 }
 
 .thinking-section::before {
@@ -426,8 +485,9 @@ code {
   display: block;
   font-weight: bold;
   margin-bottom: 8px;
-  color: #9c7c38;
+  color: var(--thinking-title);
   font-style: normal;
+  transition: color var(--transition-speed);
 }
 
 /* When thinking ends, add a subtle visual indicator */
