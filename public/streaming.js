@@ -18,7 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
     modelSelector: document.getElementById("modelSelector"),
     themeToggle: document.getElementById("themeToggle"),
     chatHeader: document.querySelector(".chat-header"),
-    chatContainer: document.querySelector(".chat-container")
+    chatContainer: document.querySelector(".chat-container"),
+    systemPromptToggle: document.getElementById("systemPromptToggle"),
+    systemPromptPanel: document.getElementById("systemPromptPanel"),
+    systemPromptInput: document.getElementById("systemPromptInput")
   };
 
   // App state
@@ -73,6 +76,26 @@ document.addEventListener("DOMContentLoaded", () => {
     // Window events
     window.addEventListener("load", handleWindowLoad);
     window.addEventListener("resize", handleWindowResize);
+
+    // System prompt toggle
+    elements.systemPromptToggle.addEventListener("click", toggleSystemPromptPanel);
+  }
+
+  /**
+   * Toggle system prompt panel visibility
+   */
+  function toggleSystemPromptPanel() {
+    elements.systemPromptPanel.classList.toggle("visible");
+    elements.chatContainer.classList.toggle("with-system-prompt");
+
+    // Adjust chat container and re-calculate heights
+    if (elements.systemPromptPanel.classList.contains("visible")) {
+      // Adjust spacing for open panel
+      handleWindowResize();
+    } else {
+      // Reset spacing when closed
+      handleWindowResize();
+    }
   }
 
   // -------------------------------------------------------------
@@ -288,6 +311,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elements.chatContainer.classList.contains("header-visible")) {
       elements.chatContainer.style.paddingTop = state.headerHeight + "px";
     }
+
+    // Adjust system prompt panel position if visible
+    if (elements.systemPromptPanel.classList.contains("visible")) {
+      const panelHeight = elements.systemPromptPanel.offsetHeight;
+      elements.chatContainer.style.paddingTop = (state.headerHeight + panelHeight) + "px";
+    }
   }
 
   // -------------------------------------------------------------
@@ -301,21 +330,66 @@ document.addEventListener("DOMContentLoaded", () => {
     const messageElement = document.createElement("div");
     messageElement.className = isUser ? "message user-message" : "message bot-message";
 
+    // Create message content container
+    const messageContent = document.createElement("div");
+    messageContent.className = "message-content";
+
+    if (isUser) {
+      messageContent.textContent = content;
+    } else {
+      // For bot messages, we'll use markdown parsing with our enhancements
+      const rawHTML = marked.parse(content);
+      messageContent.innerHTML = processHTML(rawHTML);
+    }
+
+    // Add message content to message element
+    messageElement.appendChild(messageContent);
+
+    // Add copy button
+    const actionsContainer = document.createElement("div");
+    actionsContainer.className = "message-actions";
+
+    const copyButton = document.createElement("button");
+    copyButton.className = "copy-button";
+    copyButton.textContent = "Copy";
+
+    // Save the original content that should be copied directly in a data attribute for later retrieval
+    copyButton.dataset.content = content;
+
+    copyButton.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent event bubbling
+      copyMessageContent(copyButton.dataset.content, copyButton);
+    });
+
+    actionsContainer.appendChild(copyButton);
+    messageElement.appendChild(actionsContainer);
+
     // Create time element
     const timeElement = document.createElement("div");
     timeElement.className = "message-time";
     timeElement.textContent = formatTimestamp();
-
-    if (isUser) {
-      messageElement.textContent = content;
-    } else {
-      // For bot messages, we'll use markdown parsing with our enhancements
-      const rawHTML = marked.parse(content);
-      messageElement.innerHTML = processHTML(rawHTML);
-    }
-
     messageElement.appendChild(timeElement);
+
     return messageElement;
+  }
+
+  /**
+   * Copy message content to clipboard
+   */
+  function copyMessageContent(content, buttonElement) {
+    // Copy text to clipboard
+    navigator.clipboard.writeText(content).then(() => {
+      // Show feedback
+      const originalText = buttonElement.textContent;
+      buttonElement.textContent = "Copied!";
+
+      // Reset button text after 2 seconds
+      setTimeout(() => {
+        buttonElement.textContent = originalText;
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
   }
 
   /**
@@ -397,6 +471,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Create or update the thinking section
       updateThinkingSection(element, thinkingContent, true);
+
+      // Update the copy button to include the full content (without thinking part)
+      const copyButton = element.querySelector('.copy-button');
+      if (copyButton) {
+        // Store the processed content (without thinking section) in the data attribute
+        copyButton.dataset.content = regularContent;
+
+        // Remove previous event listeners and add new one with correct content
+        copyButton.replaceWith(copyButton.cloneNode(true));
+
+        // Get the fresh reference
+        const newCopyButton = element.querySelector('.copy-button');
+
+        newCopyButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          copyMessageContent(regularContent, newCopyButton);
+        });
+      }
     }
     // If we have a partial thinking section (still in progress)
     else if (thinkStartIndex !== -1) {
@@ -423,10 +515,13 @@ document.addEventListener("DOMContentLoaded", () => {
       // First, save any existing timestamp
       const existingTimestamp = parentElement.querySelector(".message-time");
 
-      // Save any existing content (except timestamps)
+      // Save any existing actions
+      const existingActions = parentElement.querySelector(".message-actions");
+
+      // Save any existing content (except timestamps and actions)
       let existingContent = "";
       Array.from(parentElement.childNodes).forEach((node) => {
-        if (!node.classList || !node.classList.contains("message-time")) {
+        if (!node.classList || (!node.classList.contains("message-time") && !node.classList.contains("message-actions"))) {
           existingContent += node.outerHTML || node.textContent;
         }
       });
@@ -444,6 +539,11 @@ document.addEventListener("DOMContentLoaded", () => {
       regularContent.className = "regular-content";
       regularContent.innerHTML = existingContent;
       responseWrapper.appendChild(regularContent);
+
+      // Add actions back if they existed
+      if (existingActions) {
+        parentElement.appendChild(existingActions);
+      }
 
       // Add timestamp back if it existed
       if (existingTimestamp) {
@@ -486,7 +586,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Get selected model
     const selectedModel = elements.modelSelector.value;
-    const isDeepseekModel = selectedModel === "deepseek-r1:14b";
+    const isDeepseekModel = selectedModel === "deepseek-r1";
+
+    // Get system prompt if provided
+    const systemPrompt = elements.systemPromptInput.value.trim();
 
     // Create user message element
     const userMessageElement = createMessageElement(message, true);
@@ -518,6 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
           message: message,
           messages: state.conversationHistory,
           model: selectedModel,
+          systemPrompt: systemPrompt // Add system prompt to request
         }),
       });
 
@@ -599,9 +703,33 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Add timestamp and save to conversation history
-    updateMessageTimestamp(botResponseElement);
+    // Save to conversation history first
     state.conversationHistory.push({ role: "assistant", content: fullResponse });
+
+    // Update copy button content directly with the final response content
+    const copyButton = botResponseElement.querySelector('.copy-button');
+    if (copyButton) {
+      // Set data content explicitly
+      copyButton.dataset.content = fullResponse;
+
+      // Create completely new button (simplest way to ensure clean event listeners)
+      const newCopyButton = document.createElement('button');
+      newCopyButton.className = 'copy-button';
+      newCopyButton.textContent = 'Copy';
+      newCopyButton.dataset.content = fullResponse;
+
+      // Add direct event listener with the correct content
+      newCopyButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        copyMessageContent(fullResponse, newCopyButton);
+      });
+
+      // Replace old button
+      copyButton.parentNode.replaceChild(newCopyButton, copyButton);
+    }
+
+    // Add timestamp AFTER updating button
+    updateMessageTimestamp(botResponseElement);
   }
 
   /**

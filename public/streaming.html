@@ -20,9 +20,18 @@
             <option value="gemma3:12b">Google Gemini 12</option>
             <option value="gemma3:27b">Google Gemini 27</option>
             <option value="gemma3">Google Gemini</option>
-            <option value="deepseek-r1:14b">Deepseek R1</option>
+            <option value="deepseek-r1">Deepseek R1</option>
             <option value="llama3.2">Meta Llama</option>
           </select>
+
+          <!-- Add system prompt toggle button -->
+          <button id="systemPromptToggle" class="system-prompt-toggle" aria-label="Toggle system prompt">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"></path>
+            </svg>
+          </button>
+
           <!-- Theme toggle button -->
           <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode">
             <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -45,6 +54,15 @@
         </div>
       </div>
     </header>
+
+    <!-- Add system prompt panel (hidden by default) -->
+    <div id="systemPromptPanel" class="system-prompt-panel">
+      <div class="system-prompt-container">
+        <label for="systemPromptInput">System Prompt:</label>
+        <textarea id="systemPromptInput" class="system-prompt-input"
+          placeholder="Enter instructions for the AI model (e.g., 'You are a helpful assistant...')"></textarea>
+      </div>
+    </div>
 
     <!-- Main chat area for messages -->
     <main id="chatMessages" class="chat-messages" aria-live="polite"></main>

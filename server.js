@@ -40,14 +40,23 @@ app.post('/chat', async (req, res) => {
 });
 
 app.post('/stream', async (req, res) => {
-  const { message, messages, model } = req.body;
+  const { message, messages, model, systemPrompt } = req.body;
 
   if (!message && !messages) {
     return res.status(400).json({ error: 'Message or messages are required' });
   }
 
   // Use provided message history or create a simple one with the current message
-  const messageHistory = messages || [{ role: 'user', content: message }];
+  let messageHistory = messages || [{ role: 'user', content: message }];
+
+  // Add system prompt if provided
+  if (systemPrompt && systemPrompt.trim() !== '') {
+    // Insert system prompt at the beginning of the messages array
+    messageHistory = [
+      { role: 'system', content: systemPrompt },
+      ...messageHistory
+    ];
+  }
 
   // Use specified model or default to gemma3
   const modelToUse = model || 'gemma3';
