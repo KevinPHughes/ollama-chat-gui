@@ -24,7 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
     systemPromptInput: document.getElementById("systemPromptInput"),
     savedPromptsSelector: document.getElementById("savedPromptsSelector"),
     newConversationBtn: document.getElementById("newConversationBtn"),
-    savedConversationsBtn: document.getElementById("savedConversationsBtn")
+    savedConversationsBtn: document.getElementById("savedConversationsBtn"),
+    conversationModal: document.getElementById("conversationModal"),
+    closeModal: document.getElementById("closeModal"),
+    conversationList: document.getElementById("conversationList")
   };
 
   // App state
@@ -97,6 +100,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Saved prompts selector
     elements.savedPromptsSelector.addEventListener("change", loadSelectedPrompt);
+
+    // Modal event listeners
+    elements.closeModal.addEventListener("click", closeConversationModal);
+    elements.conversationModal.addEventListener("click", (e) => {
+      if (e.target === elements.conversationModal) {
+        closeConversationModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && elements.conversationModal.style.display === "block") {
+        closeConversationModal();
+      }
+    });
   }
 
   /**
@@ -964,24 +982,107 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Show saved conversations in a simple alert for now (can be enhanced later)
+   * Show saved conversations in a modal dialog
    */
   function showSavedConversations() {
     const conversations = getSavedConversations();
+    populateConversationModal(conversations);
+    elements.conversationModal.style.display = "block";
+  }
+
+  /**
+   * Populate the conversation modal with conversation data
+   */
+  function populateConversationModal(conversations) {
+    elements.conversationList.innerHTML = '';
 
     if (conversations.length === 0) {
-      alert('No saved conversations found.');
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-history';
+      emptyDiv.textContent = 'No saved conversations found.';
+      elements.conversationList.appendChild(emptyDiv);
       return;
     }
 
-    // Create a simple list to show conversations
-    let conversationList = 'Saved Conversations:\n\n';
-    conversations.forEach((conv, index) => {
-      const date = new Date(conv.timestamp).toLocaleDateString();
-      conversationList += `${index + 1}. ${conv.title} (${date})\n`;
+    conversations.forEach(conversation => {
+      const conversationItem = createConversationItem(conversation);
+      elements.conversationList.appendChild(conversationItem);
+    });
+  }
+
+  /**
+   * Create a conversation item element
+   */
+  function createConversationItem(conversation) {
+    const item = document.createElement('div');
+    item.className = 'conversation-item';
+    item.dataset.conversationId = conversation.id;
+
+    const title = document.createElement('div');
+    title.className = 'conversation-title';
+    title.textContent = conversation.title;
+
+    const preview = document.createElement('div');
+    preview.className = 'conversation-preview';
+    const firstUserMessage = conversation.messages.find(msg => msg.role === 'user');
+    if (firstUserMessage) {
+      const previewText = firstUserMessage.content.length > 100
+        ? firstUserMessage.content.substring(0, 100) + '...'
+        : firstUserMessage.content;
+      preview.textContent = previewText;
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'conversation-meta';
+
+    const date = document.createElement('span');
+    date.className = 'conversation-date';
+    date.textContent = new Date(conversation.timestamp).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
 
-    conversationList += '\n(Future enhancement: Click to load conversation)';
-    alert(conversationList);
+    const messageCount = document.createElement('span');
+    messageCount.className = 'conversation-message-count';
+    messageCount.textContent = `${conversation.messages.length} messages`;
+
+    meta.appendChild(date);
+    meta.appendChild(messageCount);
+
+    item.appendChild(title);
+    item.appendChild(preview);
+    item.appendChild(meta);
+
+    // Add click event to load conversation
+    item.addEventListener('click', () => {
+      loadConversation(conversation);
+      closeConversationModal();
+    });
+
+    return item;
+  }
+
+  /**
+   * Load a selected conversation
+   */
+  function loadConversation(conversation) {
+    // Save current conversation before loading new one
+    if (state.conversationHistory.length > 0) {
+      saveConversation();
+    }
+
+    // Load the selected conversation
+    state.conversationHistory = [...conversation.messages];
+    displayLoadedConversation(conversation.messages);
+  }
+
+  /**
+   * Close the conversation modal
+   */
+  function closeConversationModal() {
+    elements.conversationModal.style.display = "none";
   }
 });
