@@ -710,7 +710,8 @@ code {
 }
 
 /* System prompt panel styles */
-.system-prompt-toggle {
+.system-prompt-toggle,
+.action-button {
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
@@ -728,7 +729,8 @@ code {
   outline: none;
 }
 
-.system-prompt-toggle:hover {
+.system-prompt-toggle:hover,
+.action-button:hover {
   background-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -750,10 +752,33 @@ code {
   gap: 8px;
 }
 
+.system-prompt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .system-prompt-container label {
   color: var(--text-color);
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.saved-prompts-selector {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  min-width: 150px;
+  outline: none;
+  transition: border 0.3s;
+}
+
+.saved-prompts-selector:focus {
+  border-color: var(--primary-color);
 }
 
 .system-prompt-input {
@@ -778,4 +803,46 @@ code {
 /* Adjust chat container when system prompt is visible */
 .chat-container.with-system-prompt .chat-messages {
   height: calc(100vh - 230px);
+}
+
+/* Tooltip styles for header action buttons (always below) */
+.header-controls button[title],
+.header-controls .theme-toggle[title] {
+  position: relative;
+}
+
+.header-controls button[title]:hover::after,
+.header-controls .theme-toggle[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px); /* Show below the button */
+  transform: translateX(-50%);
+  background: rgba(40, 40, 40, 0.95);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 1;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.header-controls button[title]::after,
+.header-controls .theme-toggle[title]::after {
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.header-controls button[title]:hover::after,
+.header-controls .theme-toggle[title]:hover::after {
+  opacity: 1;
+}
+
+/* Optional: increase z-index for tooltips above header */
+.chat-header {
+  z-index: 1100;
 }

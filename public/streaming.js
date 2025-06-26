@@ -21,7 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
     chatContainer: document.querySelector(".chat-container"),
     systemPromptToggle: document.getElementById("systemPromptToggle"),
     systemPromptPanel: document.getElementById("systemPromptPanel"),
-    systemPromptInput: document.getElementById("systemPromptInput")
+    systemPromptInput: document.getElementById("systemPromptInput"),
+    savedPromptsSelector: document.getElementById("savedPromptsSelector"),
+    newConversationBtn: document.getElementById("newConversationBtn"),
+    savedConversationsBtn: document.getElementById("savedConversationsBtn")
   };
 
   // App state
@@ -36,6 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Constants
   const SCROLL_THRESHOLD = 5;
+  const MAX_SAVED_CONVERSATIONS = 10; // Limit number of saved conversations
+  const MAX_SAVED_PROMPTS = 20; // Limit number of saved system prompts
 
   // Initialize app components
   initializeApp();
@@ -59,6 +64,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize UI
     initializeUI();
+
+    // Load saved conversations and system prompts
+    loadLastConversation();
+    loadLastSystemPrompt();
   }
 
   /**
@@ -79,6 +88,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // System prompt toggle
     elements.systemPromptToggle.addEventListener("click", toggleSystemPromptPanel);
+
+    // New conversation button
+    elements.newConversationBtn.addEventListener("click", startNewConversation);
+
+    // Saved conversations button
+    elements.savedConversationsBtn.addEventListener("click", showSavedConversations);
+
+    // Saved prompts selector
+    elements.savedPromptsSelector.addEventListener("change", loadSelectedPrompt);
   }
 
   /**
@@ -591,6 +609,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Get system prompt if provided
     const systemPrompt = elements.systemPromptInput.value.trim();
 
+    // Save system prompt if it's new or different
+    if (systemPrompt) {
+      saveSystemPrompt(systemPrompt);
+      updateSavedPromptsDropdown(); // Update dropdown after saving
+    }
+
     // Create user message element
     const userMessageElement = createMessageElement(message, true);
     elements.chatMessages.appendChild(userMessageElement);
@@ -730,6 +754,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add timestamp AFTER updating button
     updateMessageTimestamp(botResponseElement);
+
+    // Save conversation to localStorage
+    saveConversation();
   }
 
   /**
@@ -744,5 +771,217 @@ document.addEventListener("DOMContentLoaded", () => {
     timeElement.className = "message-time";
     timeElement.textContent = formatTimestamp();
     messageElement.appendChild(timeElement);
+  }
+
+  // -------------------------------------------------------------
+  // LOCALSTORAGE MANAGEMENT
+  // -------------------------------------------------------------
+
+  /**
+   * Save current conversation to localStorage
+   */
+  function saveConversation() {
+    if (state.conversationHistory.length === 0) return;
+
+    const conversations = getSavedConversations();
+    const timestamp = new Date().toISOString();
+    const conversationTitle = generateConversationTitle();
+
+    const newConversation = {
+      id: timestamp,
+      title: conversationTitle,
+      messages: [...state.conversationHistory],
+      timestamp: timestamp
+    };
+
+    // Add to beginning of array and limit size
+    conversations.unshift(newConversation);
+    if (conversations.length > MAX_SAVED_CONVERSATIONS) {
+      conversations.splice(MAX_SAVED_CONVERSATIONS);
+    }
+
+    localStorage.setItem('chatConversations', JSON.stringify(conversations));
+  }
+
+  /**
+   * Load saved conversations from localStorage
+   */
+  function getSavedConversations() {
+    try {
+      const saved = localStorage.getItem('chatConversations');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Generate a title for the conversation based on first user message
+   */
+  function generateConversationTitle() {
+    const firstUserMessage = state.conversationHistory.find(msg => msg.role === 'user');
+    if (firstUserMessage) {
+      const title = firstUserMessage.content.slice(0, 40);
+      return title.length < firstUserMessage.content.length ? title + '...' : title;
+    }
+    return 'New Conversation';
+  }
+
+  /**
+   * Save system prompt to localStorage
+   */
+  function saveSystemPrompt(promptText) {
+    if (!promptText.trim()) return;
+
+    const savedPrompts = getSavedSystemPrompts();
+    const timestamp = new Date().toISOString();
+    const promptTitle = promptText.slice(0, 30) + (promptText.length > 30 ? '...' : '');
+
+    const newPrompt = {
+      id: timestamp,
+      title: promptTitle,
+      content: promptText,
+      timestamp: timestamp
+    };
+
+    // Check if this exact prompt already exists
+    const existingIndex = savedPrompts.findIndex(p => p.content === promptText);
+    if (existingIndex !== -1) {
+      // Update timestamp of existing prompt and move to top
+      savedPrompts.splice(existingIndex, 1);
+    }
+
+    // Add to beginning and limit size
+    savedPrompts.unshift(newPrompt);
+    if (savedPrompts.length > MAX_SAVED_PROMPTS) {
+      savedPrompts.splice(MAX_SAVED_PROMPTS);
+    }
+
+    localStorage.setItem('systemPrompts', JSON.stringify(savedPrompts));
+  }
+
+  /**
+   * Load saved system prompts from localStorage
+   */
+  function getSavedSystemPrompts() {
+    try {
+      const saved = localStorage.getItem('systemPrompts');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error loading system prompts:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Load conversation history from localStorage on page load
+   */
+  function loadLastConversation() {
+    const conversations = getSavedConversations();
+    if (conversations.length > 0) {
+      // Load the most recent conversation
+      const lastConversation = conversations[0];
+      state.conversationHistory = [...lastConversation.messages];
+
+      // Display the conversation in the UI
+      displayLoadedConversation(lastConversation.messages);
+    }
+  }
+
+  /**
+   * Display loaded conversation messages in the UI
+   */
+  function displayLoadedConversation(messages) {
+    elements.chatMessages.innerHTML = '';
+
+    messages.forEach(msg => {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        const messageElement = createMessageElement(msg.content, msg.role === 'user');
+        elements.chatMessages.appendChild(messageElement);
+      }
+    });
+
+    scrollToBottomIfNeeded();
+  }
+
+  /**
+   * Clear current conversation and start fresh
+   */
+  function startNewConversation() {
+    // Save current conversation before clearing
+    if (state.conversationHistory.length > 0) {
+      saveConversation();
+    }
+
+    // Clear conversation
+    state.conversationHistory = [];
+    elements.chatMessages.innerHTML = '';
+  }
+
+  /**
+   * Load saved system prompt on page load
+   */
+  function loadLastSystemPrompt() {
+    const savedPrompts = getSavedSystemPrompts();
+    if (savedPrompts.length > 0) {
+      // Load the most recent system prompt
+      elements.systemPromptInput.value = savedPrompts[0].content;
+    }
+
+    // Populate saved prompts dropdown
+    updateSavedPromptsDropdown();
+  }
+
+  /**
+   * Update the saved prompts dropdown
+   */
+  function updateSavedPromptsDropdown() {
+    const savedPrompts = getSavedSystemPrompts();
+    elements.savedPromptsSelector.innerHTML = '<option value="">Load saved prompt...</option>';
+
+    savedPrompts.forEach(prompt => {
+      const option = document.createElement('option');
+      option.value = prompt.id;
+      option.textContent = prompt.title;
+      elements.savedPromptsSelector.appendChild(option);
+    });
+  }
+
+  /**
+   * Load a selected prompt from the dropdown
+   */
+  function loadSelectedPrompt() {
+    const selectedId = elements.savedPromptsSelector.value;
+    if (!selectedId) return;
+
+    const savedPrompts = getSavedSystemPrompts();
+    const selectedPrompt = savedPrompts.find(p => p.id === selectedId);
+
+    if (selectedPrompt) {
+      elements.systemPromptInput.value = selectedPrompt.content;
+    }
+  }
+
+  /**
+   * Show saved conversations in a simple alert for now (can be enhanced later)
+   */
+  function showSavedConversations() {
+    const conversations = getSavedConversations();
+
+    if (conversations.length === 0) {
+      alert('No saved conversations found.');
+      return;
+    }
+
+    // Create a simple list to show conversations
+    let conversationList = 'Saved Conversations:\n\n';
+    conversations.forEach((conv, index) => {
+      const date = new Date(conv.timestamp).toLocaleDateString();
+      conversationList += `${index + 1}. ${conv.title} (${date})\n`;
+    });
+
+    conversationList += '\n(Future enhancement: Click to load conversation)';
+    alert(conversationList);
   }
 });
