@@ -507,24 +507,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Create or update the thinking section
       updateThinkingSection(element, thinkingContent, true);
-
-      // Update the copy button to include the full content (without thinking part)
-      const copyButton = element.querySelector('.copy-button');
-      if (copyButton) {
-        // Store the processed content (without thinking section) in the data attribute
-        copyButton.dataset.content = regularContent;
-
-        // Remove previous event listeners and add new one with correct content
-        copyButton.replaceWith(copyButton.cloneNode(true));
-
-        // Get the fresh reference
-        const newCopyButton = element.querySelector('.copy-button');
-
-        newCopyButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          copyMessageContent(regularContent, newCopyButton);
-        });
-      }
     }
     // If we have a partial thinking section (still in progress)
     else if (thinkStartIndex !== -1) {
@@ -751,22 +733,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update copy button content directly with the final response content
     const copyButton = botResponseElement.querySelector('.copy-button');
     if (copyButton) {
-      // Set data content explicitly
+      // Update the dataset content
       copyButton.dataset.content = fullResponse;
 
-      // Create completely new button (simplest way to ensure clean event listeners)
-      const newCopyButton = document.createElement('button');
-      newCopyButton.className = 'copy-button';
-      newCopyButton.textContent = 'Copy';
+      // Remove existing event listeners by cloning the button
+      const newCopyButton = copyButton.cloneNode(true);
       newCopyButton.dataset.content = fullResponse;
 
-      // Add direct event listener with the correct content
+      // Add fresh event listener
       newCopyButton.addEventListener('click', (e) => {
         e.stopPropagation();
         copyMessageContent(fullResponse, newCopyButton);
       });
 
-      // Replace old button
+      // Replace the old button with the new one
       copyButton.parentNode.replaceChild(newCopyButton, copyButton);
     }
 
