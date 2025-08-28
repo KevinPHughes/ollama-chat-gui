@@ -69,7 +69,7 @@ app.post('/stream', async (req, res) => {
     const stream = await ollama.chat({
       model: modelToUse, // Use the model specified by the client
       messages: messageHistory,
-      stream: true
+      stream: true,
     });
 
     // Process each chunk as it arrives

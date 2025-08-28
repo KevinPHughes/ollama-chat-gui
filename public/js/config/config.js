@@ -52,13 +52,16 @@ export const CONFIG = {
 
   // Model Configuration
   MODELS: {
-    default: 'gemma3:12b',
+    default: 'gpt-oss:20b',
     supportedModels: [
+      { id: 'gpt-oss:20b', name: 'OpenAI gpt-oss', supportsThinking: true },
       { id: 'gemma3:12b', name: 'Google Gemini 12', supportsThinking: false },
       { id: 'gemma3:27b', name: 'Google Gemini 27', supportsThinking: false },
       { id: 'gemma3', name: 'Google Gemini', supportsThinking: false },
       { id: 'deepseek-r1', name: 'Deepseek R1', supportsThinking: true },
-      { id: 'llama3.2', name: 'Meta Llama', supportsThinking: false }
+      { id: 'llama3.2', name: 'Meta Llama', supportsThinking: false },
+      // Example: Adding a new model is as simple as adding it here
+      // { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', supportsThinking: true }
     ]
   },
 

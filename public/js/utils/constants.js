@@ -3,6 +3,8 @@
  * Centralized place for all application constants
  */
 
+import { CONFIG } from '../config/config.js';
+
 export const CONSTANTS = {
   SCROLL_THRESHOLD: 5,
   MAX_SAVED_CONVERSATIONS: 10,
@@ -73,5 +75,14 @@ export const CONSTANTS = {
     conversationDate: 'conversation-date',
     conversationMessageCount: 'conversation-message-count',
     emptyHistory: 'empty-history'
+  },
+
+  // Utility functions
+  /**
+   * Check if a model supports thinking features
+   */
+  isThinkingModel: (modelId) => {
+    const model = CONFIG.MODELS.supportedModels.find(m => m.id === modelId);
+    return model ? model.supportsThinking : false;
   }
 };

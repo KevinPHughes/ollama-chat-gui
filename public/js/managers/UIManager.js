@@ -4,6 +4,7 @@
  */
 
 import { CONSTANTS } from '../utils/constants.js';
+import { CONFIG } from '../config/config.js';
 
 export class UIManager {
   constructor(domManager, scrollManager, messageHandler, storageManager) {
@@ -19,6 +20,7 @@ export class UIManager {
    */
   initialize() {
     this.setupInitialState();
+    this.populateModelSelector();
     this.setupEventListeners();
     this.configureMarkdown();
     this.loadLastSystemPrompt();
@@ -33,6 +35,52 @@ export class UIManager {
     
     // Focus chat input
     this.domManager.focus('chatInput');
+  }
+
+  /**
+   * Populate model selector from configuration
+   */
+  populateModelSelector() {
+    const modelSelector = this.domManager.getElement('modelSelector');
+    
+    // Clear existing options
+    modelSelector.innerHTML = '';
+
+    // Add models from configuration
+    CONFIG.MODELS.supportedModels.forEach(model => {
+      const option = document.createElement('option');
+      option.value = model.id;
+      option.textContent = model.name;
+      
+      // Add visual indicator for thinking models
+      if (model.supportsThinking) {
+        option.textContent += ' 🧠';
+      }
+      
+      modelSelector.appendChild(option);
+    });
+
+    // Set default model if specified in config
+    if (CONFIG.MODELS.default) {
+      this.domManager.setValue('modelSelector', CONFIG.MODELS.default);
+    }
+  }
+
+  /**
+   * Refresh model selector (useful for dynamic model updates)
+   */
+  refreshModelSelector() {
+    const currentSelection = this.getSelectedModel();
+    this.populateModelSelector();
+    
+    // Try to restore previous selection if it still exists
+    const modelSelector = this.domManager.getElement('modelSelector');
+    const options = Array.from(modelSelector.options);
+    const hasCurrentSelection = options.some(option => option.value === currentSelection);
+    
+    if (hasCurrentSelection) {
+      this.setSelectedModel(currentSelection);
+    }
   }
 
   /**

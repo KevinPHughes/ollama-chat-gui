@@ -10,8 +10,8 @@ export class ThinkingProcessor {
   /**
    * Process thinking content for supported models
    */
-  static processThinkingContent(content, element, isDeepseekModel) {
-    if (!isDeepseekModel || !Utils.hasThinkingTags(content)) {
+  static processThinkingContent(content, element, supportsThinking) {
+    if (!supportsThinking || !Utils.hasThinkingTags(content)) {
       return content;
     }
 

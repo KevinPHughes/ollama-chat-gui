@@ -23,7 +23,7 @@ export class MessageHandler {
     if (!message) return;
 
     const selectedModel = this.domManager.getValue('modelSelector');
-    const isDeepseekModel = selectedModel === CONSTANTS.MODELS.DEEPSEEK_R1;
+    const supportsThinking = CONSTANTS.isThinkingModel(selectedModel);
     const systemPrompt = this.domManager.getValue('systemPromptInput').trim();
 
     // Save system prompt if provided
@@ -54,7 +54,7 @@ export class MessageHandler {
 
     try {
       const response = await this.fetchStreamingResponse(message, selectedModel, systemPrompt);
-      await this.handleStreamingResponse(response, botResponseElement, isDeepseekModel);
+      await this.handleStreamingResponse(response, botResponseElement, supportsThinking);
     } catch (error) {
       this.handleError(error, botResponseElement);
     }
@@ -81,7 +81,7 @@ export class MessageHandler {
   /**
    * Handle streaming response from the server
    */
-  async handleStreamingResponse(response, botResponseElement, isDeepseekModel) {
+  async handleStreamingResponse(response, botResponseElement, supportsThinking) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullResponse = '';
@@ -106,7 +106,7 @@ export class MessageHandler {
             const chunk = JSON.parse(data);
             if (chunk.message?.content) {
               fullResponse += chunk.message.content;
-              this.updateBotMessage(botResponseElement, fullResponse, isDeepseekModel);
+              this.updateBotMessage(botResponseElement, fullResponse, supportsThinking);
             }
           } catch (e) {
             console.error('Error parsing chunk:', e);
@@ -122,12 +122,12 @@ export class MessageHandler {
   /**
    * Update bot message during streaming
    */
-  updateBotMessage(botResponseElement, fullResponse, isDeepseekModel) {
-    // Process thinking content for deepseek model
+  updateBotMessage(botResponseElement, fullResponse, supportsThinking) {
+    // Process thinking content for thinking-capable models
     const processedContent = ThinkingProcessor.processThinkingContent(
       fullResponse,
       botResponseElement,
-      isDeepseekModel
+      supportsThinking
     );
 
     // Find regular content container

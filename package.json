@@ -2,7 +2,7 @@
   "dependencies": {
     "express": "^4.21.2",
     "nodemon": "^3.1.9",
-    "ollama": "^0.5.14"
+    "ollama": "^0.5.17"
   },
   "name": "ollamagui",
   "version": "1.0.0",
