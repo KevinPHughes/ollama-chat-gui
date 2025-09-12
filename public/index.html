@@ -33,6 +33,49 @@
     #send-button:hover {
       background-color: #3e8e41;
     }
+
+    /* Loading indicator styles */
+    .loading-bubble {
+      background-color: #f0f0f0;
+      border-radius: 18px;
+      padding: 12px 16px;
+      margin: 5px 0;
+      display: inline-block;
+      position: relative;
+    }
+
+    .loading-dots {
+      display: inline-block;
+    }
+
+    .loading-dots::after {
+      content: '';
+      display: inline-block;
+      width: 0;
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0% { content: ''; }
+      25% { content: '.'; }
+      50% { content: '..'; }
+      75% { content: '...'; }
+      100% { content: ''; }
+    }
+
+    .user-message {
+      background-color: #eee;
+      margin-bottom: 5px;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .bot-message {
+      background-color: #ddd;
+      margin-bottom: 5px;
+      padding: 8px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 
@@ -60,6 +103,22 @@
         // Get the text from the textbox
         const message = chatInput.value;
 
+        // Add user message to chat
+        const humanEntry = document.createElement('div');
+        humanEntry.textContent = "You: " + message;
+        humanEntry.className = 'user-message';
+        chatArea.appendChild(humanEntry);
+
+        // Show loading indicator
+        const loadingElement = document.createElement('div');
+        loadingElement.className = 'loading-bubble';
+        loadingElement.innerHTML = 'Bot: <span class="loading-dots">Thinking</span>';
+        chatArea.appendChild(loadingElement);
+
+        // Clear input and scroll to bottom
+        chatInput.value = '';
+        chatArea.scrollTop = chatArea.scrollHeight;
+
         // Send the message to the server
         fetch('/chat', {
           method: 'POST',
@@ -70,23 +129,29 @@
         })
           .then(response => response.json())
           .then(data => {
+            // Remove loading indicator
+            loadingElement.remove();
+            
             const botResponse = data.message.message.content;
-            //clear chatInput
-            const humanEntry = document.createElement('div');
-            humanEntry.textContent = "You: " + message;
-            humanEntry.style.backgroundColor = '#eee';
-            humanEntry.style.marginBottom = '5px';
-            chatArea.appendChild(humanEntry);
-            chatInput.value = '';
             // Display the bot's response
             const botResponseElement = document.createElement('div');
             botResponseElement.innerHTML = "Bot: " + marked.parse(botResponse);
-            botResponseElement.style.backgroundColor = '#ddd';
-            botResponseElement.style.marginBottom = '5px';
+            botResponseElement.className = 'bot-message';
             chatArea.appendChild(botResponseElement);
+            
+            // Scroll to bottom
+            chatArea.scrollTop = chatArea.scrollHeight;
           })
           .catch(error => {
             console.error('Error:', error);
+            // Remove loading indicator and show error
+            loadingElement.remove();
+            const errorElement = document.createElement('div');
+            errorElement.textContent = "Bot: Sorry, there was an error processing your message.";
+            errorElement.className = 'bot-message';
+            errorElement.style.color = '#d32f2f';
+            chatArea.appendChild(errorElement);
+            chatArea.scrollTop = chatArea.scrollHeight;
           });
       }
     });

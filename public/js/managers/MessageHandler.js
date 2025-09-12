@@ -53,19 +53,28 @@ export class MessageHandler {
     // Add to conversation history
     this.conversationHistory.push({ role: 'user', content: message });
 
-    // Create bot response element
-    const botResponseElement = MessageFactory.createMessageElement('', false);
-    botResponseElement.classList.add(CONSTANTS.CSS_CLASSES.loading);
-    this.domManager.appendChild('chatMessages', botResponseElement);
+    // Create and show loading indicator
+    const loadingElement = this.createLoadingIndicator();
+    this.domManager.appendChild('chatMessages', loadingElement);
 
     // Enable auto-scroll and scroll to bottom
     this.scrollManager.enableAutoScroll();
     this.scrollManager.scrollToBottomIfNeeded();
 
+    // Create bot response element (will replace loading indicator)
+    const botResponseElement = MessageFactory.createMessageElement('', false);
+
     try {
       const response = await this.fetchStreamingResponse(message, selectedModel, systemPrompt);
+      
+      // Replace loading indicator with actual response element
+      this.replaceLoadingWithResponse(loadingElement, botResponseElement);
+      
       await this.handleStreamingResponse(response, botResponseElement, supportsThinking);
     } catch (error) {
+      // Replace loading indicator with response element for error display
+      this.replaceLoadingWithResponse(loadingElement, botResponseElement);
+      
       if (error instanceof PayloadTooLargeError) {
         this.handlePayloadTooLargeError(error, botResponseElement);
       } else {
@@ -120,9 +129,6 @@ export class MessageHandler {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullResponse = '';
-
-    // Remove loading indicator
-    botResponseElement.classList.remove(CONSTANTS.CSS_CLASSES.loading);
 
     // Process the streaming response
     while (true) {
@@ -360,8 +366,8 @@ export class MessageHandler {
       }
 
       // Show loading message
-      const loadingElement = MessageFactory.createMessageElement('Summarizing conversation...', false);
-      loadingElement.classList.add(CONSTANTS.CSS_CLASSES.loading);
+      const loadingElement = this.createLoadingIndicator();
+      loadingElement.querySelector('.typing-text').textContent = 'Summarizing conversation';
       this.domManager.appendChild('chatMessages', loadingElement);
 
       // Request server to handle summarization by making a new request
@@ -369,16 +375,12 @@ export class MessageHandler {
       const selectedModel = this.domManager.getValue('modelSelector');
       const systemPrompt = this.domManager.getValue('systemPromptInput').trim();
 
-      // Remove the loading message
-      loadingElement.remove();
-
       // Retry the last message - server will handle summarization
       const response = await this.fetchStreamingResponse(lastUserMessage.content, selectedModel, systemPrompt);
       
-      // Create new bot response element
+      // Create new bot response element and replace loading indicator
       const botResponseElement = MessageFactory.createMessageElement('', false);
-      botResponseElement.classList.add(CONSTANTS.CSS_CLASSES.loading);
-      this.domManager.appendChild('chatMessages', botResponseElement);
+      this.replaceLoadingWithResponse(loadingElement, botResponseElement);
 
       // Handle the response
       const supportsThinking = CONSTANTS.isThinkingModel(selectedModel);
@@ -393,6 +395,39 @@ export class MessageHandler {
         false
       );
       this.domManager.appendChild('chatMessages', errorElement);
+    }
+  }
+
+  /**
+   * Create an animated loading indicator
+   */
+  createLoadingIndicator() {
+    const loadingElement = document.createElement('div');
+    loadingElement.className = 'message assistant message-loading';
+    
+    loadingElement.innerHTML = `
+      <div class="typing-indicator">
+        <span class="typing-text">AI is thinking</span>
+        <div class="dot-animation">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    `;
+    
+    return loadingElement;
+  }
+
+  /**
+   * Replace loading indicator with actual response element
+   */
+  replaceLoadingWithResponse(loadingElement, responseElement) {
+    if (loadingElement && loadingElement.parentNode) {
+      loadingElement.parentNode.replaceChild(responseElement, loadingElement);
+    } else {
+      // Fallback: just add the response element
+      this.domManager.appendChild('chatMessages', responseElement);
     }
   }
 }
