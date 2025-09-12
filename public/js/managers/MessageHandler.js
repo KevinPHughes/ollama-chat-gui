@@ -7,6 +7,16 @@ import { CONSTANTS } from '../utils/constants.js';
 import { MessageFactory } from '../components/MessageFactory.js';
 import { ThinkingProcessor } from '../components/ThinkingProcessor.js';
 
+/**
+ * Custom error for payload too large scenarios
+ */
+class PayloadTooLargeError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'PayloadTooLargeError';
+  }
+}
+
 export class MessageHandler {
   constructor(domManager, scrollManager, storageManager) {
     this.domManager = domManager;
@@ -56,7 +66,11 @@ export class MessageHandler {
       const response = await this.fetchStreamingResponse(message, selectedModel, systemPrompt);
       await this.handleStreamingResponse(response, botResponseElement, supportsThinking);
     } catch (error) {
-      this.handleError(error, botResponseElement);
+      if (error instanceof PayloadTooLargeError) {
+        this.handlePayloadTooLargeError(error, botResponseElement);
+      } else {
+        this.handleError(error, botResponseElement);
+      }
     }
   }
 
@@ -64,18 +78,39 @@ export class MessageHandler {
    * Fetch streaming response from server
    */
   async fetchStreamingResponse(message, model, systemPrompt) {
-    return await fetch(CONSTANTS.ENDPOINTS.stream, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: message,
-        messages: this.conversationHistory,
-        model: model,
-        systemPrompt: systemPrompt
-      }),
-    });
+    try {
+      const response = await fetch(CONSTANTS.ENDPOINTS.stream, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message,
+          messages: this.conversationHistory,
+          model: model,
+          systemPrompt: systemPrompt
+        }),
+      });
+
+      // Check for payload too large error
+      if (response.status === 413) {
+        const errorData = await response.json();
+        if (errorData.code === 'PAYLOAD_TOO_LARGE') {
+          throw new PayloadTooLargeError(errorData.message);
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof PayloadTooLargeError) {
+        throw error;
+      }
+      throw new Error(`Network error: ${error.message}`);
+    }
   }
 
   /**
@@ -104,7 +139,14 @@ export class MessageHandler {
 
           try {
             const chunk = JSON.parse(data);
-            if (chunk.message?.content) {
+            
+            // Handle different message types
+            if (chunk.type === 'notification') {
+              // Show notification to user
+              if (window.chatApp && window.chatApp.getManager) {
+                window.chatApp.getManager('ui').showNotification(chunk.message, 'info');
+              }
+            } else if (chunk.message?.content) {
               fullResponse += chunk.message.content;
               this.updateBotMessage(botResponseElement, fullResponse, supportsThinking);
             }
@@ -165,6 +207,39 @@ export class MessageHandler {
   handleError(error, botResponseElement) {
     console.error('Error:', error);
     botResponseElement.textContent = 'Error: Could not get a response';
+    
+    // Add timestamp to error message
+    MessageFactory.updateMessageTimestamp(botResponseElement);
+  }
+
+  /**
+   * Handle payload too large errors with user-friendly message and options
+   */
+  handlePayloadTooLargeError(error, botResponseElement) {
+    console.error('Payload too large:', error);
+    
+    // Create a more informative error message with options
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'payload-error-container';
+    errorContainer.innerHTML = `
+      <div class="error-message">
+        <h4>⚠️ Conversation Too Long</h4>
+        <p>The conversation history has become too large to process. You have a few options:</p>
+        <div class="error-actions">
+          <button class="btn btn-primary" onclick="window.chatApp.getManager('message').summarizeAndContinue()">
+            📝 Summarize & Continue
+          </button>
+          <button class="btn btn-secondary" onclick="window.chatApp.reset()">
+            🆕 Start New Conversation
+          </button>
+        </div>
+        <p class="error-details">${error.message}</p>
+      </div>
+    `;
+    
+    // Clear bot response and add error container
+    botResponseElement.innerHTML = '';
+    botResponseElement.appendChild(errorContainer);
     
     // Add timestamp to error message
     MessageFactory.updateMessageTimestamp(botResponseElement);
@@ -265,5 +340,59 @@ export class MessageHandler {
       option.textContent = prompt.title;
       this.domManager.getElement('savedPromptsSelector').appendChild(option);
     });
+  }
+
+  /**
+   * Summarize conversation and continue with the last message
+   */
+  async summarizeAndContinue() {
+    if (this.conversationHistory.length === 0) {
+      console.warn('No conversation to summarize');
+      return;
+    }
+
+    try {
+      // Get the last user message
+      const lastUserMessage = [...this.conversationHistory].reverse().find(msg => msg.role === 'user');
+      if (!lastUserMessage) {
+        console.warn('No user message found to retry');
+        return;
+      }
+
+      // Show loading message
+      const loadingElement = MessageFactory.createMessageElement('Summarizing conversation...', false);
+      loadingElement.classList.add(CONSTANTS.CSS_CLASSES.loading);
+      this.domManager.appendChild('chatMessages', loadingElement);
+
+      // Request server to handle summarization by making a new request
+      // The server will automatically summarize if the conversation is too long
+      const selectedModel = this.domManager.getValue('modelSelector');
+      const systemPrompt = this.domManager.getValue('systemPromptInput').trim();
+
+      // Remove the loading message
+      loadingElement.remove();
+
+      // Retry the last message - server will handle summarization
+      const response = await this.fetchStreamingResponse(lastUserMessage.content, selectedModel, systemPrompt);
+      
+      // Create new bot response element
+      const botResponseElement = MessageFactory.createMessageElement('', false);
+      botResponseElement.classList.add(CONSTANTS.CSS_CLASSES.loading);
+      this.domManager.appendChild('chatMessages', botResponseElement);
+
+      // Handle the response
+      const supportsThinking = CONSTANTS.isThinkingModel(selectedModel);
+      await this.handleStreamingResponse(response, botResponseElement, supportsThinking);
+
+    } catch (error) {
+      console.error('Error during summarize and continue:', error);
+      
+      // Show error message
+      const errorElement = MessageFactory.createMessageElement(
+        'Failed to summarize conversation. Please try starting a new conversation.',
+        false
+      );
+      this.domManager.appendChild('chatMessages', errorElement);
+    }
   }
 }

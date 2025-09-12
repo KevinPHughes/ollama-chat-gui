@@ -959,3 +959,83 @@ code {
     padding: 12px;
   }
 }
+
+/* -------------------------------------------------------------
+   ERROR HANDLING STYLES
+   ------------------------------------------------------------- */
+
+/* Error handling styles */
+.payload-error-container {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px 0;
+}
+
+.payload-error-container .error-message h4 {
+  color: #d32f2f;
+  margin: 0 0 12px 0;
+  font-size: 16px;
+}
+
+.payload-error-container .error-message p {
+  margin: 8px 0;
+  color: #333;
+}
+
+.payload-error-container .error-actions {
+  margin: 16px 0;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.payload-error-container .btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.payload-error-container .btn-primary {
+  background: #1976d2;
+  color: white;
+}
+
+.payload-error-container .btn-primary:hover {
+  background: #1565c0;
+}
+
+.payload-error-container .btn-secondary {
+  background: #757575;
+  color: white;
+}
+
+.payload-error-container .btn-secondary:hover {
+  background: #616161;
+}
+
+.payload-error-container .error-details {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-top: 12px;
+}
+
+/* Dark theme styles for error container */
+body.dark-theme .payload-error-container {
+  background: #2d1b1b;
+  border-color: #4a2c2c;
+}
+
+body.dark-theme .payload-error-container .error-message h4 {
+  color: #f44336;
+}
+
+body.dark-theme .payload-error-container .error-message p,
+body.dark-theme .payload-error-container .error-details {
+  color: #e0e0e0;
+}
