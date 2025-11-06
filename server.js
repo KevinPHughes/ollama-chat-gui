@@ -23,6 +23,16 @@ function estimateTokenCount(messages) {
   }, 0);
 }
 
+// Format milliseconds as seconds and minutes
+function formatDuration(ms) {
+  if (ms < 1000) return `${ms}ms`;
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  const remSec = sec % 60;
+  return `${min}m ${remSec}s`;
+}
+
 // Function to summarize conversation history
 async function summarizeConversation(messages, model) {
   try {
@@ -96,26 +106,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'streaming.html'));
 });
 
-app.post('/chat', async (req, res) => {
-  const { message } = req.body;
-
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required' });
-  }
-
-  try {
-    const response = await ollama.chat({
-      model: 'gemma3',
-      messages: [{ role: 'user', content: message }],
-    });
-    console.log(response.message.content);
-
-    res.json({ message: response });
-  } catch (error) {
-    console.error('Error generating response:', error);
-    res.status(500).json({ error: 'Failed to generate response' });
-  }
-});
 
 // Error handling middleware for payload too large
 app.use((error, req, res, next) => {
@@ -131,6 +121,10 @@ app.use((error, req, res, next) => {
 });
 
 app.post('/stream', async (req, res) => {
+  const startTime = Date.now();
+  let firstChunkTime = null;
+  let firstThinkingTime = null;
+  let lastThinkingTime = null;
   const { message, messages, model, systemPrompt } = req.body;
 
   if (!message && !messages) {
@@ -170,15 +164,44 @@ app.post('/stream', async (req, res) => {
       })}\n\n`);
     }
 
+    let thinkOption;
+    if (modelToUse === 'gpt-oss:20b') {
+      //thinkOption = 'light';
+      thinkOption = undefined
+    } else if (modelToUse === 'deepseek-latest:r1') {
+      thinkOption = true;
+    } else {
+      thinkOption = undefined;
+    }
+
     const stream = await ollama.chat({
-      model: modelToUse, // Use the model specified by the client
+      model: modelToUse,
       messages: messageHistory,
       stream: true,
+      
     });
 
     // Process each chunk as it arrives
+    let firstChunkLogged = false;
     for await (const chunk of stream) {
+      if (chunk.message?.thinking) {
+        // Timing for first and last 'thinking' message
+        const now = Date.now();
+        if (!firstThinkingTime) {
+          firstThinkingTime = now;
+          console.log(`[POST /stream] First 'thinking' message after ${formatDuration(firstThinkingTime - startTime)}`);
+        }
+        lastThinkingTime = now;
+        // Send thinking content as a separate SSE event
+        res.write(`data: ${JSON.stringify({ type: 'thinking', content: chunk.message.thinking })}\n\n`);
+      }
       if (chunk.message?.content) {
+        if (!firstChunkLogged) {
+          firstChunkTime = Date.now();
+          const delta = firstChunkTime - startTime;
+          console.log(`[POST /stream] First response chunk after ${formatDuration(delta)}`);
+          firstChunkLogged = true;
+        }
         // Send each chunk as an SSE event
         res.write(`data: ${JSON.stringify(chunk)}\n\n`);
       }
@@ -187,6 +210,12 @@ app.post('/stream', async (req, res) => {
     // End the stream when done
     res.write('data: [DONE]\n\n');
     res.end();
+
+    // Log total 'thinking' time if any thinking messages were sent
+    if (firstThinkingTime && lastThinkingTime) {
+      const thinkingDuration = lastThinkingTime - firstThinkingTime;
+      console.log(`[POST /stream] Total 'thinking' time: ${formatDuration(thinkingDuration)}`);
+    }
   } catch (error) {
     console.error('Error streaming response:', error);
     
@@ -200,6 +229,17 @@ app.post('/stream', async (req, res) => {
     // Send error message
     res.write(`data: ${JSON.stringify({ error: 'Streaming failed', details: error.message })}\n\n`);
     res.end();
+  } finally {
+    const duration = Date.now() - startTime;
+    if (firstChunkTime) {
+      const firstChunkDelta = firstChunkTime - startTime;
+      console.log(`[POST /stream] First response chunk after ${formatDuration(firstChunkDelta)}`);
+    }
+    if (firstThinkingTime && lastThinkingTime) {
+      const thinkingDuration = lastThinkingTime - firstThinkingTime;
+      console.log(`[POST /stream] Total 'thinking' time: ${formatDuration(thinkingDuration)}`);
+    }
+    console.log(`[POST /stream] Request took ${formatDuration(duration)}`);
   }
 });
 

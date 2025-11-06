@@ -155,6 +155,47 @@ export class StorageManager {
   }
 
   /**
+   * Save application settings
+   */
+  static saveSettings(settings) {
+    try {
+      localStorage.setItem(CONSTANTS.STORAGE_KEYS.settings, JSON.stringify(settings));
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
+  }
+
+  /**
+   * Get application settings
+   */
+  static getSettings() {
+    try {
+      const saved = localStorage.getItem(CONSTANTS.STORAGE_KEYS.settings);
+      return saved ? JSON.parse(saved) : {};
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Set a specific setting
+   */
+  static setSetting(key, value) {
+    const settings = this.getSettings();
+    settings[key] = value;
+    this.saveSettings(settings);
+  }
+
+  /**
+   * Get a specific setting with default value
+   */
+  static getSetting(key, defaultValue = null) {
+    const settings = this.getSettings();
+    return settings.hasOwnProperty(key) ? settings[key] : defaultValue;
+  }
+
+  /**
    * Get storage usage information
    */
   static getStorageInfo() {

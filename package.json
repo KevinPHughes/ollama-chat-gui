@@ -2,7 +2,7 @@
   "dependencies": {
     "express": "^4.21.2",
     "nodemon": "^3.1.9",
-    "ollama": "^0.5.17"
+    "ollama": "^0.5.14"
   },
   "name": "ollamagui",
   "version": "1.0.0",
@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

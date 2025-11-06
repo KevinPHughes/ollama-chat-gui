@@ -5,6 +5,7 @@
 
 import { CONSTANTS } from '../utils/constants.js';
 import { CONFIG } from '../config/config.js';
+import { StorageManager } from './StorageManager.js';
 
 export class UIManager {
   constructor(domManager, scrollManager, messageHandler, storageManager) {
@@ -24,6 +25,7 @@ export class UIManager {
     this.setupEventListeners();
     this.configureMarkdown();
     this.loadLastSystemPrompt();
+    this.loadSidebarState();
   }
 
   /**
@@ -97,6 +99,26 @@ export class UIManager {
       this.messageHandler.startNewConversation();
     });
 
+    // Mobile menu toggle
+    this.domManager.addEventListener('mobileMenuToggle', 'click', () => {
+      this.toggleMobileSidebar();
+    });
+
+    // Mobile new chat button
+    this.domManager.addEventListener('mobileNewChatBtn', 'click', () => {
+      this.messageHandler.startNewConversation();
+    });
+
+    // Mobile sidebar backdrop click
+    this.domManager.addEventListener('sidebarBackdrop', 'click', () => {
+      this.closeMobileSidebar();
+    });
+
+    // Desktop sidebar collapse toggle
+    this.domManager.addEventListener('sidebarCollapseToggle', 'click', () => {
+      this.toggleSidebarCollapse();
+    });
+
     // Input events
     this.domManager.addEventListener('sendButton', 'click', () => {
       this.messageHandler.sendMessage();
@@ -114,6 +136,18 @@ export class UIManager {
     this.domManager.addEventListener('savedPromptsSelector', 'change', () => {
       this.loadSelectedPrompt();
     });
+
+    // ESC key to close mobile sidebar
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        this.closeMobileSidebar();
+      }
+    });
+
+    // Close mobile sidebar when clicking sidebar buttons (like New Chat)
+    this.domManager.addEventListener('newConversationBtn', 'click', () => {
+      this.closeMobileSidebar();
+    }, true); // Use capture to ensure this runs
   }
 
   /**
@@ -273,14 +307,138 @@ export class UIManager {
   }
 
   /**
+   * Toggle mobile sidebar visibility
+   */
+  toggleMobileSidebar() {
+    const sidebar = this.domManager.getElement('sidebar');
+    const backdrop = this.domManager.getElement('sidebarBackdrop');
+    
+    if (sidebar && backdrop) {
+      const isVisible = sidebar.classList.contains('mobile-visible');
+      
+      if (isVisible) {
+        this.closeMobileSidebar();
+      } else {
+        this.openMobileSidebar();
+      }
+    } else {
+      console.warn('Mobile sidebar elements not found:', { sidebar: !!sidebar, backdrop: !!backdrop });
+    }
+  }
+
+  /**
+   * Open mobile sidebar
+   */
+  openMobileSidebar() {
+    const sidebar = this.domManager.getElement('sidebar');
+    const backdrop = this.domManager.getElement('sidebarBackdrop');
+    
+    if (sidebar && backdrop) {
+      sidebar.classList.add('mobile-visible');
+      backdrop.classList.add('visible');
+      
+      // Prevent body scrolling when sidebar is open
+      document.body.style.overflow = 'hidden';
+      
+      // Force sidebar to be expanded on mobile (ignore desktop collapse state)
+      // The CSS handles the visual override, this is just for consistency
+    }
+  }
+
+  /**
+   * Close mobile sidebar
+   */
+  closeMobileSidebar() {
+    const sidebar = this.domManager.getElement('sidebar');
+    const backdrop = this.domManager.getElement('sidebarBackdrop');
+    
+    if (sidebar && backdrop) {
+      sidebar.classList.remove('mobile-visible');
+      backdrop.classList.remove('visible');
+      
+      // Restore body scrolling
+      document.body.style.overflow = '';
+    }
+  }
+
+  /**
+   * Toggle desktop sidebar collapse state
+   */
+  toggleSidebarCollapse() {
+    const sidebar = this.domManager.getElement('sidebar');
+    
+    if (sidebar) {
+      const isCollapsed = sidebar.classList.contains(CONSTANTS.CSS_CLASSES.collapsed);
+      
+      if (isCollapsed) {
+        this.expandSidebar();
+      } else {
+        this.collapseSidebar();
+      }
+      
+      // Save the collapsed state to localStorage
+      StorageManager.setSetting('sidebarCollapsed', !isCollapsed);
+    }
+  }
+
+  /**
+   * Collapse the desktop sidebar
+   */
+  collapseSidebar() {
+    const sidebar = this.domManager.getElement('sidebar');
+    const collapseButton = this.domManager.getElement('sidebarCollapseToggle');
+    
+    if (sidebar) {
+      sidebar.classList.add(CONSTANTS.CSS_CLASSES.collapsed);
+    }
+    
+    if (collapseButton) {
+      collapseButton.setAttribute('aria-label', 'Expand sidebar');
+      collapseButton.setAttribute('title', 'Expand sidebar');
+    }
+  }
+
+  /**
+   * Expand the desktop sidebar
+   */
+  expandSidebar() {
+    const sidebar = this.domManager.getElement('sidebar');
+    const collapseButton = this.domManager.getElement('sidebarCollapseToggle');
+    
+    if (sidebar) {
+      sidebar.classList.remove(CONSTANTS.CSS_CLASSES.collapsed);
+    }
+    
+    if (collapseButton) {
+      collapseButton.setAttribute('aria-label', 'Collapse sidebar');
+      collapseButton.setAttribute('title', 'Collapse sidebar');
+    }
+  }
+
+  /**
+   * Load sidebar collapsed state from storage
+   */
+  loadSidebarState() {
+    const isCollapsed = StorageManager.getSetting('sidebarCollapsed', false);
+    
+    if (isCollapsed) {
+      this.collapseSidebar();
+    }
+  }
+
+  /**
    * Get UI state
    */
   getUIState() {
+    const sidebar = this.domManager.getElement('sidebar');
+    
     return {
       systemPromptVisible: this.domManager.hasClass('systemPromptPanel', CONSTANTS.CSS_CLASSES.visible),
       selectedModel: this.getSelectedModel(),
       systemPrompt: this.getSystemPrompt(),
-      chatInputValue: this.domManager.getValue('chatInput')
+      chatInputValue: this.domManager.getValue('chatInput'),
+      mobileSidebarVisible: sidebar ? sidebar.classList.contains('mobile-visible') : false,
+      sidebarCollapsed: sidebar ? sidebar.classList.contains(CONSTANTS.CSS_CLASSES.collapsed) : false
     };
   }
 }

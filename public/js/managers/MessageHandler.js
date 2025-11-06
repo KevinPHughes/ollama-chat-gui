@@ -129,6 +129,7 @@ export class MessageHandler {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullResponse = '';
+    let fullThinkingContent = '';
 
     // Process the streaming response
     while (true) {
@@ -152,15 +153,26 @@ export class MessageHandler {
               if (window.chatApp && window.chatApp.getManager) {
                 window.chatApp.getManager('ui').showNotification(chunk.message, 'info');
               }
+            } else if (chunk.type === 'thinking' && supportsThinking) {
+              // Handle thinking content
+              fullThinkingContent += chunk.content;
+              ThinkingProcessor.updateThinkingSection(botResponseElement, fullThinkingContent, false);
+              this.scrollManager.scrollToBottomIfNeeded();
             } else if (chunk.message?.content) {
+              // Handle regular message content
               fullResponse += chunk.message.content;
-              this.updateBotMessage(botResponseElement, fullResponse, supportsThinking);
+              this.updateBotMessage(botResponseElement, fullResponse);
             }
           } catch (e) {
             console.error('Error parsing chunk:', e);
           }
         }
       }
+    }
+
+    // Mark thinking as complete if any thinking content was received
+    if (fullThinkingContent && supportsThinking) {
+      ThinkingProcessor.updateThinkingSection(botResponseElement, fullThinkingContent, true);
     }
 
     // Finalize message
@@ -170,20 +182,13 @@ export class MessageHandler {
   /**
    * Update bot message during streaming
    */
-  updateBotMessage(botResponseElement, fullResponse, supportsThinking) {
-    // Process thinking content for thinking-capable models
-    const processedContent = ThinkingProcessor.processThinkingContent(
-      fullResponse,
-      botResponseElement,
-      supportsThinking
-    );
-
-    // Find regular content container
+  updateBotMessage(botResponseElement, fullResponse) {
+    // Find or create regular content container
     const regularContentContainer = ThinkingProcessor.getRegularContentContainer(botResponseElement);
 
     // Update regular content
     if (regularContentContainer) {
-      regularContentContainer.innerHTML = MessageFactory.processHTML(marked.parse(processedContent));
+      regularContentContainer.innerHTML = MessageFactory.processHTML(marked.parse(fullResponse));
     }
 
     // Scroll to bottom as new content arrives

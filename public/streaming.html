@@ -10,38 +10,20 @@
 
 <body>
   <div class="chat-container">
-    <!-- Chat header with app title and controls -->
-    <header class="chat-header">
-      <h1>Kevin's Chat Assistant</h1>
-      <div class="header-controls">
-        <div class="model-selector-container">
-          <label for="modelSelector">Model:</label>
-          <select id="modelSelector" class="model-selector">
-            <!-- Models will be populated dynamically from config -->
-          </select>
-
-          <!-- Add system prompt toggle button -->
-          <button id="systemPromptToggle" class="system-prompt-toggle" aria-label="Toggle system prompt" title="Show/hide system prompt">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"></path>
-            </svg>
-          </button>
-
-          <!-- New conversation button -->
-          <button id="newConversationBtn" class="action-button" aria-label="Start new conversation" title="Start a new conversation">
+    <!-- Mobile sidebar backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+    
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Kevin's Chat Assistant</h1>
+        <div class="sidebar-header-controls">
+          <!-- Sidebar collapse toggle -->
+          <button id="sidebarCollapseToggle" class="sidebar-collapse-toggle" aria-label="Collapse sidebar" title="Collapse sidebar">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 5v14m-7-7h14"></path>
+              <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
           </button>
-
-          <!-- Saved conversations button -->
-          <button id="savedConversationsBtn" class="action-button" aria-label="View saved conversations" title="View saved conversations">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 3h18v18H3zM9 9h6m-6 4h6"></path>
-            </svg>
-          </button>
-
           <!-- Theme toggle button -->
           <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle light/dark mode">
             <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -63,27 +45,79 @@
           </button>
         </div>
       </div>
+      
+      <div class="sidebar-content">
+        <!-- New Chat Section -->
+        <div class="sidebar-section always-visible">
+          <button id="newConversationBtn" class="new-chat-button" aria-label="Start new conversation" title="Start a new conversation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14m-7-7h14"></path>
+            </svg>
+            <span>New Chat</span>
+          </button>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="sidebar-section">
+          <h3>Model</h3>
+          <div class="model-selector-container">
+            <select id="modelSelector" class="model-selector">
+              <!-- Models will be populated dynamically from config -->
+            </select>
+          </div>
+        </div>
+
+        <!-- System Prompt -->
+        <div class="sidebar-section">
+          <h3>System Prompt</h3>
+          <div class="system-prompt-container">
+            <select id="savedPromptsSelector" class="saved-prompts-selector">
+              <option value="">Load saved prompt...</option>
+            </select>
+            <textarea id="systemPromptInput" class="system-prompt-input"
+              placeholder="Enter instructions for the AI model (e.g., 'You are a helpful assistant...')"></textarea>
+          </div>
+        </div>
+
+        <!-- Conversation History -->
+        <div class="sidebar-section">
+          <h3>History</h3>
+          <button id="savedConversationsBtn" class="new-chat-button" style="background-color: var(--secondary-color); color: var(--text-color);" aria-label="View saved conversations" title="View saved conversations">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3h18v18H3zM9 9h6m-6 4h6"></path>
+            </svg>
+            View Conversations
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Header (hidden on desktop) -->
+    <header class="mobile-header">
+      <h1>Kevin's Chat Assistant</h1>
+      <div class="mobile-controls">
+        <button id="mobileNewChatBtn" class="mobile-new-chat-btn" aria-label="Start new conversation" title="Start new conversation">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14m-7-7h14"></path>
+          </svg>
+        </button>
+        <button id="mobileMenuToggle" class="theme-toggle" aria-label="Toggle menu" title="Toggle menu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
     </header>
 
-    <!-- Add system prompt panel (hidden by default) -->
-    <div id="systemPromptPanel" class="system-prompt-panel">
-      <div class="system-prompt-container">
-        <div class="system-prompt-header">
-          <label for="systemPromptInput">System Prompt:</label>
-          <select id="savedPromptsSelector" class="saved-prompts-selector">
-            <option value="">Load saved prompt...</option>
-          </select>
-        </div>
-        <textarea id="systemPromptInput" class="system-prompt-input"
-          placeholder="Enter instructions for the AI model (e.g., 'You are a helpful assistant...')"></textarea>
-      </div>
-    </div>
+    <!-- Main Chat Area -->
+    <div class="main-area">
+      <!-- Main chat area for messages -->
+      <main id="chatMessages" class="chat-messages" aria-live="polite"></main>
 
-    <!-- Main chat area for messages -->
-    <main id="chatMessages" class="chat-messages" aria-live="polite"></main>
-
-    <!-- Chat input area -->
-    <footer class="chat-input-container">
+      <!-- Chat input area -->
+      <footer class="chat-input-container">
       <textarea id="chatInput" class="chat-input" placeholder="Type a message..." aria-label="Type your message"></textarea>
       <button id="sendButton" class="send-button" aria-label="Send message">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -92,7 +126,15 @@
           <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
         </svg>
       </button>
-    </footer>
+      </footer>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop" class="scroll-to-top" aria-label="Scroll to top" title="Scroll to top">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
   </div>
 
   <!-- Conversation History Modal -->

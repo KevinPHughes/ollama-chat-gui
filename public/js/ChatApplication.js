@@ -158,11 +158,22 @@ export class ChatApplication {
   }
 }
 
+/**
+ * Handle mobile viewport height issues
+ */
+function setMobileViewportHeight() {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+
 // Initialize application when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
   const app = new ChatApplication();
   
   try {
+    // Set mobile viewport height
+    setMobileViewportHeight();
+    
     await app.initialize();
     
     // Make app globally available for debugging
@@ -170,4 +181,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('Failed to start application:', error);
   }
+});
+
+// Handle viewport changes (mobile browser address bar show/hide)
+window.addEventListener('resize', () => {
+  setMobileViewportHeight();
+});
+
+// Handle orientation changes on mobile
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    setMobileViewportHeight();
+  }, 100);
 });

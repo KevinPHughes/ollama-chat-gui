@@ -31,6 +31,20 @@ export class DOMManager {
   }
 
   /**
+   * Query selector (for dynamic selection)
+   */
+  querySelector(selector) {
+    return document.querySelector(selector);
+  }
+
+  /**
+   * Query all selectors (for dynamic selection)
+   */
+  querySelectorAll(selector) {
+    return document.querySelectorAll(selector);
+  }
+
+  /**
    * Get all elements
    */
   getAllElements() {

@@ -4,24 +4,8 @@
  */
 
 import { CONSTANTS } from '../utils/constants.js';
-import { Utils } from '../utils/utils.js';
 
 export class ThinkingProcessor {
-  /**
-   * Process thinking content for supported models
-   */
-  static processThinkingContent(content, element, supportsThinking) {
-    if (!supportsThinking || !Utils.hasThinkingTags(content)) {
-      return content;
-    }
-
-    const { regularContent, thinkingContent, isComplete } = Utils.extractThinkingContent(content);
-    
-    // Create or update the thinking section
-    this.updateThinkingSection(element, thinkingContent, isComplete);
-
-    return regularContent;
-  }
 
   /**
    * Update the thinking section UI

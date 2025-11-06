@@ -53,46 +53,7 @@ export class Utils {
     return JSON.parse(JSON.stringify(obj));
   }
 
-  /**
-   * Check if a string contains HTML thinking tags
-   */
-  static hasThinkingTags(content) {
-    return content.includes('<think>');
-  }
 
-  /**
-   * Extract thinking content from text
-   */
-  static extractThinkingContent(content) {
-    const thinkStartTag = "<think>";
-    const thinkEndTag = "</think>";
-    const thinkStartIndex = content.indexOf(thinkStartTag);
-
-    if (thinkStartIndex === -1) {
-      return { regularContent: content, thinkingContent: '', isComplete: false };
-    }
-
-    const thinkEndIndex = content.indexOf(thinkEndTag, thinkStartIndex);
-    
-    if (thinkEndIndex !== -1) {
-      // Complete thinking section
-      const thinkingContent = content.substring(
-        thinkStartIndex + thinkStartTag.length,
-        thinkEndIndex
-      );
-      const beforeThinking = content.substring(0, thinkStartIndex);
-      const afterThinking = content.substring(thinkEndIndex + thinkEndTag.length);
-      const regularContent = beforeThinking + afterThinking;
-
-      return { regularContent, thinkingContent, isComplete: true };
-    } else {
-      // Partial thinking section
-      const thinkingContent = content.substring(thinkStartIndex + thinkStartTag.length);
-      const regularContent = content.substring(0, thinkStartIndex);
-
-      return { regularContent, thinkingContent, isComplete: false };
-    }
-  }
 
   /**
    * Safely parse JSON with fallback

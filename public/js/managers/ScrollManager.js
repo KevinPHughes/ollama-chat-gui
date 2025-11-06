@@ -25,6 +25,7 @@ export class ScrollManager {
     this.calculateHeaderHeight();
     this.setupEventListeners();
     this.initializeHeaderState();
+    this.setupScrollToTop();
   }
 
   /**
@@ -201,5 +202,49 @@ export class ScrollManager {
       isNearBottom: this.isNearBottom(),
       isScrollHandlerActive: this.isScrollHandlerActive
     };
+  }
+
+  /**
+   * Setup scroll-to-top button functionality
+   */
+  setupScrollToTop() {
+    const scrollToTopBtn = this.domManager.getElement('scrollToTop');
+    if (!scrollToTopBtn) return;
+
+    // Show/hide button based on scroll position
+    this.domManager.addEventListener('chatMessages', 'scroll', () => {
+      const chatMessages = this.domManager.getElement('chatMessages');
+      const shouldShow = chatMessages.scrollTop > 300; // Show after scrolling 300px
+      
+      if (shouldShow) {
+        scrollToTopBtn.classList.add('visible');
+      } else {
+        scrollToTopBtn.classList.remove('visible');
+      }
+    });
+
+    // Handle button click
+    this.domManager.addEventListener('scrollToTop', 'click', () => {
+      this.scrollToTop();
+    });
+  }
+
+  /**
+   * Scroll to top of chat messages with smooth animation
+   */
+  scrollToTop() {
+    const chatMessages = this.domManager.getElement('chatMessages');
+    if (chatMessages) {
+      chatMessages.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      
+      // Temporarily disable auto-scroll to prevent interference
+      this.disableAutoScroll();
+      setTimeout(() => {
+        this.enableAutoScroll();
+      }, 1000); // Re-enable after scroll animation completes
+    }
   }
 }

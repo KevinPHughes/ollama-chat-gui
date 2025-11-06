@@ -27,7 +27,13 @@ export const CONSTANTS = {
     savedConversationsBtn: '#savedConversationsBtn',
     conversationModal: '#conversationModal',
     closeModal: '#closeModal',
-    conversationList: '#conversationList'
+    conversationList: '#conversationList',
+    mobileMenuToggle: '#mobileMenuToggle',
+    mobileNewChatBtn: '#mobileNewChatBtn',
+    sidebar: '.sidebar',
+    sidebarBackdrop: '#sidebarBackdrop',
+    scrollToTop: '#scrollToTop',
+    sidebarCollapseToggle: '#sidebarCollapseToggle'
   },
 
   // API Endpoints
@@ -39,7 +45,8 @@ export const CONSTANTS = {
   STORAGE_KEYS: {
     theme: 'theme',
     conversations: 'chatConversations',
-    systemPrompts: 'systemPrompts'
+    systemPrompts: 'systemPrompts',
+    settings: 'appSettings'
   },
 
   // Model Types
@@ -74,7 +81,8 @@ export const CONSTANTS = {
     conversationMeta: 'conversation-meta',
     conversationDate: 'conversation-date',
     conversationMessageCount: 'conversation-message-count',
-    emptyHistory: 'empty-history'
+    emptyHistory: 'empty-history',
+    collapsed: 'collapsed'
   },
 
   // Utility functions
