@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm /Users/kevinhughes/src/test/ollamaGUI/public/index.html /Users/kevinhughes/src/test/ollamaGUI/public/streaming.js.backup /Users/kevinhughes/src/test/ollamaGUI/public/test.html /Users/kevinhughes/src/test/ollamaGUI/test-model-selector.js /Users/kevinhughes/src/test/ollamaGUI/test-thinking-models.js /Users/kevinhughes/src/test/ollamaGUI/test-thinking-stream.js)",
+      "Bash(rm -rf /Users/kevinhughes/src/test/ollamaGUI/.history)"
+    ]
+  }
+}

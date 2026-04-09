@@ -4,6 +4,7 @@
  */
 
 import { CONSTANTS } from '../utils/constants.js';
+import { CONFIG } from '../config/config.js';
 import { Utils } from '../utils/utils.js';
 
 export class StorageManager {
@@ -13,7 +14,7 @@ export class StorageManager {
   static saveConversations(conversations) {
     try {
       // Limit the number of conversations
-      const limitedConversations = conversations.slice(0, CONSTANTS.MAX_SAVED_CONVERSATIONS);
+      const limitedConversations = conversations.slice(0, CONFIG.STORAGE.maxConversations);
       localStorage.setItem(CONSTANTS.STORAGE_KEYS.conversations, JSON.stringify(limitedConversations));
     } catch (error) {
       console.error('Error saving conversations:', error);
@@ -61,7 +62,7 @@ export class StorageManager {
   static saveSystemPrompts(prompts) {
     try {
       // Limit the number of prompts
-      const limitedPrompts = prompts.slice(0, CONSTANTS.MAX_SAVED_PROMPTS);
+      const limitedPrompts = prompts.slice(0, CONFIG.STORAGE.maxSystemPrompts);
       localStorage.setItem(CONSTANTS.STORAGE_KEYS.systemPrompts, JSON.stringify(limitedPrompts));
     } catch (error) {
       console.error('Error saving system prompts:', error);

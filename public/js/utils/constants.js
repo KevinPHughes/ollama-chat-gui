@@ -6,10 +6,6 @@
 import { CONFIG } from '../config/config.js';
 
 export const CONSTANTS = {
-  SCROLL_THRESHOLD: 5,
-  MAX_SAVED_CONVERSATIONS: 10,
-  MAX_SAVED_PROMPTS: 20,
-  
   // DOM Selectors
   SELECTORS: {
     chatInput: '#chatInput',

@@ -4,6 +4,7 @@
  */
 
 import { CONSTANTS } from '../utils/constants.js';
+import { CONFIG } from '../config/config.js';
 import { Utils } from '../utils/utils.js';
 
 export class ScrollManager {
@@ -78,7 +79,7 @@ export class ScrollManager {
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
     
     // Toggle auto-scroll based on scroll position
-    this.shouldAutoScroll = distanceFromBottom <= CONSTANTS.SCROLL_THRESHOLD;
+    this.shouldAutoScroll = distanceFromBottom <= CONFIG.UI.scrollThreshold;
   }
 
   /**
@@ -133,7 +134,7 @@ export class ScrollManager {
    */
   isNearBottom() {
     const { scrollHeight, scrollTop, clientHeight } = this.domManager.getScrollProperties('chatMessages');
-    return scrollHeight - scrollTop - clientHeight <= CONSTANTS.SCROLL_THRESHOLD;
+    return scrollHeight - scrollTop - clientHeight <= CONFIG.UI.scrollThreshold;
   }
 
   /**

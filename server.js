@@ -164,21 +164,10 @@ app.post('/stream', async (req, res) => {
       })}\n\n`);
     }
 
-    let thinkOption;
-    if (modelToUse === 'gpt-oss:20b') {
-      //thinkOption = 'light';
-      thinkOption = undefined
-    } else if (modelToUse === 'deepseek-latest:r1') {
-      thinkOption = true;
-    } else {
-      thinkOption = undefined;
-    }
-
     const stream = await ollama.chat({
       model: modelToUse,
       messages: messageHistory,
-      stream: true,
-      
+      stream: true,      
     });
 
     // Process each chunk as it arrives
@@ -230,16 +219,7 @@ app.post('/stream', async (req, res) => {
     res.write(`data: ${JSON.stringify({ error: 'Streaming failed', details: error.message })}\n\n`);
     res.end();
   } finally {
-    const duration = Date.now() - startTime;
-    if (firstChunkTime) {
-      const firstChunkDelta = firstChunkTime - startTime;
-      console.log(`[POST /stream] First response chunk after ${formatDuration(firstChunkDelta)}`);
-    }
-    if (firstThinkingTime && lastThinkingTime) {
-      const thinkingDuration = lastThinkingTime - firstThinkingTime;
-      console.log(`[POST /stream] Total 'thinking' time: ${formatDuration(thinkingDuration)}`);
-    }
-    console.log(`[POST /stream] Request took ${formatDuration(duration)}`);
+    console.log(`[POST /stream] Request took ${formatDuration(Date.now() - startTime)}`);
   }
 });
 

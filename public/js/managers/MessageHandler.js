@@ -39,7 +39,7 @@ export class MessageHandler {
     // Save system prompt if provided
     if (systemPrompt) {
       this.storageManager.saveSystemPrompt(systemPrompt);
-      this.updateSavedPromptsDropdown();
+      window.chatApp.getManager('ui').updateSavedPromptsDropdown();
     }
 
     // Create and display user message
@@ -191,7 +191,7 @@ export class MessageHandler {
       regularContentContainer.innerHTML = MessageFactory.processHTML(marked.parse(fullResponse));
     }
 
-    // Scroll to bottom as new content arrives
+    // Scroll to bottom as new content arrives (respects shouldAutoScroll flag)
     this.scrollManager.scrollToBottomIfNeeded();
   }
 
@@ -336,21 +336,6 @@ export class MessageHandler {
       this.conversationHistory = [...lastConversation.messages];
       this.displayConversation(lastConversation.messages);
     }
-  }
-
-  /**
-   * Update saved prompts dropdown
-   */
-  updateSavedPromptsDropdown() {
-    const savedPrompts = this.storageManager.getSystemPrompts();
-    this.domManager.setHTML('savedPromptsSelector', '<option value="">Load saved prompt...</option>');
-
-    savedPrompts.forEach(prompt => {
-      const option = document.createElement('option');
-      option.value = prompt.id;
-      option.textContent = prompt.title;
-      this.domManager.getElement('savedPromptsSelector').appendChild(option);
-    });
   }
 
   /**

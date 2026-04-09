@@ -59,6 +59,7 @@ export const CONFIG = {
       { id: 'gemma3:27b', name: 'Google Gemini 27', supportsThinking: false },
       { id: 'gemma3', name: 'Google Gemini', supportsThinking: false },
       { id: 'deepseek-r1', name: 'Deepseek R1', supportsThinking: true },
+      { id: 'gemma4:26b', name: 'Google Gemma 4', supportsThinking: true },
       { id: 'llama3.2', name: 'Meta Llama', supportsThinking: false },
       // Example: Adding a new model is as simple as adding it here
       // { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', supportsThinking: true }
